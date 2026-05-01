@@ -106,6 +106,30 @@
   .delay-4 { transition-delay: 0.4s; }
   .delay-5 { transition-delay: 0.5s; }
 
+  /* ── Laptop section text panels (stacked, crossfade between use cases) ── */
+  .laptop-text {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+  .laptop-text.is-active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .laptop-dot {
+    @apply block w-2 h-2 rounded-full bg-line-300 transition-colors duration-300;
+  }
+  .laptop-dot.is-active {
+    @apply bg-gold-700;
+    width: 24px;
+    border-radius: 4px;
+  }
+
   /* ── Stacked card "deck flip" (Awwwards-style scroll-pinned reveal) ── */
   .stack-section {
     position: relative;

@@ -1,6 +1,6 @@
 import './styles/main.css';
-import { createMeetingScene } from './three/meeting-scene.js';
 import { createHeroScene } from './three/hero-scene.js';
+import { createLaptopScene } from './three/laptop-scene.js';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -30,29 +30,24 @@ const fadeObserver = new IntersectionObserver(
 );
 document.querySelectorAll('.fade-in').forEach((el) => fadeObserver.observe(el));
 
-// ── Stacked card deck animation (scroll-pinned, page-flip reveal) ──
+// ── Laptop section: pin + scroll-driven screen swap + text crossfade ──
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const stackSection = document.querySelector('#usecases-stack');
+const laptopSection = document.querySelector('#laptop-section');
+const laptopCanvas = document.getElementById('laptop-canvas');
 
-if (stackSection && !prefersReducedMotion) {
-  const cards = stackSection.querySelectorAll('.stack-card');
-  const N = cards.length;
+if (laptopSection && laptopCanvas) {
+  const laptop = createLaptopScene(laptopCanvas);
+  const textPanels = laptopSection.querySelectorAll('.laptop-text');
+  const dots = laptopSection.querySelectorAll('.laptop-dot');
+  const N = textPanels.length;
 
-  // Initial state: stack with z-index, top card visible, rest underneath
-  cards.forEach((card, i) => {
-    gsap.set(card, {
-      zIndex: N - i,
-      transformOrigin: 'top center',
-      transformPerspective: 2400,
-      rotateX: 0,
-      opacity: 1,
-    });
-  });
+  // Initial active panel
+  if (textPanels[0]) textPanels[0].classList.add('is-active');
+  if (dots[0]) dots[0].classList.add('is-active');
 
-  // Master timeline pinned to section
-  const tl = gsap.timeline({
-    scrollTrigger: {
-      trigger: stackSection,
+  if (!prefersReducedMotion) {
+    ScrollTrigger.create({
+      trigger: laptopSection,
       start: 'top top',
       end: () => `+=${(N - 1) * window.innerHeight}`,
       pin: true,
@@ -61,64 +56,28 @@ if (stackSection && !prefersReducedMotion) {
       anticipatePin: 1,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
-        // Update progress indicator (which card is currently in view)
-        const idx = Math.min(N - 1, Math.floor(self.progress * (N - 1)) + (self.progress > 0 ? 1 : 0));
-        const indicator = document.getElementById('stack-progress-current');
-        if (indicator) {
-          indicator.textContent = String(idx + (self.progress > 0 ? 0 : 1)).padStart(2, '0');
-        }
-      },
-    },
-  });
+        const p = self.progress;
+        // Each segment is 1/N of progress
+        const idx = Math.min(N - 1, Math.floor(p * N));
 
-  // For each card except the last, animate it flipping AWAY (revealing the one below)
-  cards.forEach((card, i) => {
-    if (i === N - 1) return;
-    tl.to(card, {
-      rotateX: -85,
-      opacity: 0,
-      ease: 'power1.in',
-    }, i);
-  });
+        // Update laptop screen content
+        laptop.setProgress(p);
+
+        // Update active text panel
+        textPanels.forEach((panel, i) => {
+          panel.classList.toggle('is-active', i === idx);
+        });
+        // Update progress dots
+        dots.forEach((d, i) => {
+          d.classList.toggle('is-active', i === idx);
+        });
+      },
+    });
+  }
 }
 
 // Hero: always-on background scene
 const heroCanvas = document.querySelector('canvas[data-scene="hero"]');
 if (heroCanvas) createHeroScene(heroCanvas);
-
-// Use case scenes (lazy mount, replay on intersect)
-const sceneRegistry = {
-  meeting: createMeetingScene,
-};
-const sceneInstances = new Map();
-
-const sceneObserver = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      const canvas = entry.target;
-      const sceneKey = canvas.dataset.scene;
-      if (!sceneKey || sceneKey === 'hero' || !sceneRegistry[sceneKey]) return;
-
-      if (entry.isIntersecting) {
-        let inst = sceneInstances.get(canvas);
-        if (!inst) {
-          inst = sceneRegistry[sceneKey](canvas);
-          sceneInstances.set(canvas, inst);
-        }
-        inst.play && inst.play();
-      }
-    });
-  },
-  { threshold: 0.3 },
-);
-
-document.querySelectorAll('canvas[data-scene]').forEach((canvas) => {
-  if (canvas.dataset.scene !== 'hero') sceneObserver.observe(canvas);
-  canvas.style.cursor = 'pointer';
-  canvas.addEventListener('click', () => {
-    const inst = sceneInstances.get(canvas);
-    if (inst && inst.play) inst.play();
-  });
-});
 
 console.log('[EFIL LP v2] initialized');
