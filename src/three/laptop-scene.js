@@ -312,94 +312,178 @@ export function createLaptopScene(canvas) {
   }
 
   // ─────────────────────────────────────────────────────────
-  // 03. 営業資料 — Slides appearing one by one
+  // 03. 営業資料 — Pie chart + bar chart drawing themselves
   // ─────────────────────────────────────────────────────────
+  const PIE_SEGMENTS = [
+    { value: 38, color: '#C9A84C', label: 'AIコンサル' },
+    { value: 27, color: '#A88838', label: '開発受託' },
+    { value: 20, color: '#1B2A4A', label: '保守運用' },
+    { value: 15, color: '#A8B2C8', label: 'その他' },
+  ];
+  const BAR_DATA = [
+    { value: 45, label: '4月' },
+    { value: 62, label: '5月' },
+    { value: 71, label: '6月' },
+    { value: 88, label: '7月' },
+    { value: 105, label: '8月' },
+    { value: 120, label: '9月' },
+  ];
+
   function renderSlides(t) {
     ctx.fillStyle = '#FAF7F2';
     ctx.fillRect(0, 36, W, H - 36);
 
-    // Title
-    ctx.fillStyle = '#1F2937';
-    ctx.font = 'bold 18px "Noto Sans JP"';
-    ctx.fillText('営業提案資料.pptx', 50, 80);
-    ctx.fillStyle = '#6B7280';
-    ctx.font = '14px "Noto Sans JP"';
-    ctx.fillText('AI が自動生成中', 50, 102);
-
-    // Progress bar
-    const totalSlides = 9;
-    const slidesDone = Math.min(totalSlides, Math.floor(t * 1.3));
-    const progress = slidesDone / totalSlides;
-    ctx.fillStyle = '#E8E2D5';
-    ctx.fillRect(50, 120, W - 100, 6);
+    // Slide canvas
+    const sX = 60, sY = 78, sW = W - 120, sH = 510;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(sX, sY, sW, sH);
+    ctx.strokeStyle = '#E8E2D5';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(sX, sY, sW, sH);
     ctx.fillStyle = ACCENT;
-    ctx.fillRect(50, 120, (W - 100) * progress, 6);
+    ctx.fillRect(sX, sY, sW, 4);
+
+    // Slide title
     ctx.fillStyle = '#1F2937';
-    ctx.font = 'bold 13px "Noto Sans JP"';
-    ctx.textAlign = 'right';
-    ctx.fillText(`${slidesDone} / ${totalSlides} スライド完成`, W - 50, 110);
-    ctx.textAlign = 'left';
+    ctx.font = 'bold 26px "Noto Serif JP", serif';
+    ctx.fillText('Q3 売上構成と月次推移', sX + 32, sY + 50);
+    ctx.fillStyle = '#6B7280';
+    ctx.font = '13px "Noto Sans JP"';
+    ctx.fillText('AI 自動生成 · 営業提案資料 P.5 / 9', sX + 32, sY + 72);
 
-    // Slide grid
-    const cols = 3, rows = 3, tw = 270, th = 152, gap = 18;
-    const startX = 70;
-    const startY = 160;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const i = r * cols + c;
-        const x = startX + c * (tw + gap);
-        const y = startY + r * (th + gap);
-        if (i >= slidesDone) {
-          // Empty slot
-          ctx.strokeStyle = '#D5CFB8';
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([4, 4]);
-          ctx.strokeRect(x, y, tw, th);
-          ctx.setLineDash([]);
-        } else {
-          // Just appeared: pop animation
-          const justDone = i === slidesDone - 1;
-          let scale = 1;
-          if (justDone) {
-            const elapsed = t - (i / 1.3);
-            scale = elapsed < 0.4 ? 0.6 + elapsed * 1.0 : 1;
-          }
-          ctx.save();
-          ctx.translate(x + tw / 2, y + th / 2);
-          ctx.scale(scale, scale);
-          ctx.translate(-tw / 2, -th / 2);
+    // ── Pie chart (left) ──
+    const pieCx = sX + 200;
+    const pieCy = sY + 280;
+    const pieR = 120;
+    const pieTotal = PIE_SEGMENTS.reduce((a, s) => a + s.value, 0);
+    const PIE_STAGGER = 0.45;
+    let curAng = -Math.PI / 2;
 
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(0, 0, tw, th);
-          ctx.strokeStyle = '#E8E2D5';
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(0, 0, tw, th);
-          // mini header
-          ctx.fillStyle = ACCENT;
-          ctx.fillRect(0, 0, tw, 6);
-          // title bar
-          ctx.fillStyle = '#1F2937';
-          ctx.fillRect(14, 18, 70 + (i * 13) % 90, 8);
-          // body lines
-          ctx.fillStyle = '#A8B2C8';
-          for (let k = 0; k < 4; k++) ctx.fillRect(14, 38 + k * 12, tw - 30 - k * 18, 4);
-          // chart placeholder
-          ctx.fillStyle = '#FCE9CC';
-          ctx.fillRect(14, 96, tw - 28, 42);
-          ctx.fillStyle = ACCENT;
-          for (let k = 0; k < 5; k++) {
-            const bh = 6 + ((i * 7 + k * 13) % 28);
-            ctx.fillRect(20 + k * 38, 134 - bh, 26, bh);
-          }
-          ctx.restore();
-
-          // Page number
-          ctx.fillStyle = '#6B7280';
-          ctx.font = '11px "Noto Sans JP"';
-          ctx.fillText(`Slide ${i + 1}`, x + tw - 50, y + th + 12);
-        }
+    PIE_SEGMENTS.forEach((s, i) => {
+      const localT = t - i * PIE_STAGGER;
+      const fullSweep = (s.value / pieTotal) * Math.PI * 2;
+      if (localT < 0) {
+        curAng += fullSweep;
+        return;
       }
+      const reveal = Math.min(1, localT * 1.4);
+      const ease = 1 - Math.pow(1 - reveal, 3);
+      const sweep = fullSweep * ease;
+
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.moveTo(pieCx, pieCy);
+      ctx.arc(pieCx, pieCy, pieR, curAng, curAng + sweep);
+      ctx.closePath();
+      ctx.fill();
+      // White separator
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(pieCx, pieCy);
+      ctx.lineTo(pieCx + Math.cos(curAng) * pieR, pieCy + Math.sin(curAng) * pieR);
+      ctx.stroke();
+
+      curAng += fullSweep;
+    });
+
+    // Donut hole + center label after all segments shown
+    const allPieDone = PIE_SEGMENTS.every((_, i) => t > i * PIE_STAGGER + 0.71);
+    if (allPieDone) {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(pieCx, pieCy, 50, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#1F2937';
+      ctx.font = 'bold 22px "Noto Sans JP"';
+      ctx.textAlign = 'center';
+      ctx.fillText('100%', pieCx, pieCy + 8);
+      ctx.textAlign = 'left';
     }
+
+    // Pie legend (below)
+    PIE_SEGMENTS.forEach((s, i) => {
+      const localT = t - i * PIE_STAGGER - 0.3;
+      if (localT < 0) return;
+      const opacity = Math.min(1, localT * 2);
+      ctx.globalAlpha = opacity;
+      const lx = sX + 50;
+      const ly = sY + 460 + i * 20;
+      ctx.fillStyle = s.color;
+      ctx.fillRect(lx, ly - 10, 14, 14);
+      ctx.fillStyle = '#3A3A52';
+      ctx.font = '13px "Noto Sans JP"';
+      ctx.fillText(s.label, lx + 22, ly);
+      ctx.fillStyle = '#1F2937';
+      ctx.font = 'bold 13px "Noto Sans JP"';
+      ctx.fillText(`${s.value}%`, lx + 150, ly);
+      ctx.globalAlpha = 1;
+    });
+
+    // ── Bar chart (right) ──
+    const cX = sX + 440;
+    const cY = sY + 130;
+    const cW = sW - 480;
+    const cH = 280;
+    const maxBar = 130;
+    const barGap = 10;
+    const barW = (cW - 30 - barGap * (BAR_DATA.length - 1)) / BAR_DATA.length;
+
+    // Y-axis grid lines
+    ctx.strokeStyle = '#E8E2D5';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    for (let g = 0; g <= 4; g++) {
+      const y = cY + cH - (cH / 4) * g;
+      ctx.beginPath();
+      ctx.moveTo(cX + 30, y);
+      ctx.lineTo(cX + cW, y);
+      ctx.stroke();
+      ctx.fillStyle = '#A8B2C8';
+      ctx.font = '11px "Noto Sans JP"';
+      ctx.fillText(String(g * 30), cX + 4, y + 4);
+    }
+    ctx.setLineDash([]);
+
+    // Bars
+    const BAR_STAGGER = 0.18;
+    const barStartDelay = 0.4;
+    BAR_DATA.forEach((b, i) => {
+      const localT = t - i * BAR_STAGGER - barStartDelay;
+      if (localT < 0) return;
+      const grow = Math.min(1, localT * 2.2);
+      const eased = 1 - Math.pow(1 - grow, 3);
+      const fullH = (b.value / maxBar) * cH;
+      const h = fullH * eased;
+      const x = cX + 30 + i * (barW + barGap);
+      const y = cY + cH - h;
+
+      const grad = ctx.createLinearGradient(0, y, 0, cY + cH);
+      grad.addColorStop(0, ACCENT);
+      grad.addColorStop(1, ACCENT_DEEP);
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, barW, h);
+
+      // Value label
+      if (grow > 0.6) {
+        const opacity = (grow - 0.6) / 0.4;
+        ctx.globalAlpha = opacity;
+        ctx.fillStyle = '#1F2937';
+        ctx.font = 'bold 12px "Noto Sans JP"';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${b.value}M`, x + barW / 2, y - 8);
+        ctx.globalAlpha = 1;
+      }
+
+      // X-axis label
+      ctx.globalAlpha = Math.min(1, grow * 2);
+      ctx.fillStyle = '#6B7280';
+      ctx.font = '12px "Noto Sans JP"';
+      ctx.textAlign = 'center';
+      ctx.fillText(b.label, x + barW / 2, cY + cH + 18);
+      ctx.globalAlpha = 1;
+      ctx.textAlign = 'left';
+    });
   }
 
   // ─────────────────────────────────────────────────────────
@@ -669,119 +753,253 @@ export function createLaptopScene(canvas) {
   }
 
   // ─────────────────────────────────────────────────────────
-  // 07. 業務システム — Components flying in & connecting
+  // 07. 業務システム — Code editor with AI auto-typing
   // ─────────────────────────────────────────────────────────
-  const SYS_BLOCKS = [
-    { x: 50,  y: 60,   w: 180, h: 70,  label: '受発注 Form' },
-    { x: 280, y: 60,   w: 180, h: 70,  label: 'API Gateway' },
-    { x: 510, y: 60,   w: 180, h: 70,  label: 'Database' },
-    { x: 50,  y: 180,  w: 280, h: 90,  label: 'Dashboard' },
-    { x: 380, y: 180,  w: 280, h: 90,  label: 'Workflow' },
-    { x: 720, y: 100,  w: 220, h: 170, label: 'AI Layer', accent: true },
+  const CODE_LINES = [
+    { text: '// 受発注システム - AIが自動生成', type: 'comment' },
+    { text: 'import { db, ai } from "./services";', type: 'normal' },
+    { text: '', type: 'blank' },
+    { text: 'export async function createOrder(data) {', type: 'normal' },
+    { text: '  // バリデーション', type: 'comment' },
+    { text: '  const validated = await ai.validate(data);', type: 'normal' },
+    { text: '', type: 'blank' },
+    { text: '  // データベースに保存', type: 'comment' },
+    { text: '  const order = await db.orders.create({', type: 'normal' },
+    { text: '    customerId: validated.customerId,', type: 'normal' },
+    { text: '    items: validated.items,', type: 'normal' },
+    { text: '    total: calculateTotal(validated.items),', type: 'normal' },
+    { text: '    status: "pending"', type: 'normal' },
+    { text: '  });', type: 'normal' },
+    { text: '', type: 'blank' },
+    { text: '  await ai.sendNotification(order);', type: 'normal' },
+    { text: '  return order;', type: 'normal' },
+    { text: '}', type: 'normal' },
   ];
-  const SYS_LINKS = [
-    [0, 1], [1, 2], [1, 3], [1, 4], [3, 5], [4, 5],
-  ];
+
+  const SYNTAX = {
+    KEYWORDS: ['export', 'async', 'function', 'const', 'await', 'return', 'import', 'from'],
+    KEYWORD_COLOR: '#FFD97A',
+    STRING_COLOR: '#9DC07A',
+    COMMENT_COLOR: '#5C7A99',
+    PUNCT_COLOR: '#A8B2C8',
+    BASE_COLOR: '#D8E0EC',
+    NUMBER_COLOR: '#E2B23A',
+    PROPERTY_COLOR: '#7AB8D9',
+  };
+
+  function renderHighlightedCodeLine(slice, line, x, y) {
+    ctx.font = '13px "Courier New", monospace';
+
+    // Comments: entire line in gray
+    if (line.type === 'comment') {
+      ctx.fillStyle = SYNTAX.COMMENT_COLOR;
+      ctx.fillText(slice, x, y);
+      return;
+    }
+
+    // Step 1: render base color
+    ctx.fillStyle = SYNTAX.BASE_COLOR;
+    ctx.fillText(slice, x, y);
+
+    // Step 2: overdraw keywords in gold
+    SYNTAX.KEYWORDS.forEach((kw) => {
+      const re = new RegExp(`\\b${kw}\\b`, 'g');
+      let m;
+      while ((m = re.exec(slice)) !== null) {
+        const before = slice.substring(0, m.index);
+        const beforeWidth = ctx.measureText(before).width;
+        // Cover with bg color first to avoid pixel overlap fuzz
+        ctx.fillStyle = '#0A1426';
+        const kwWidth = ctx.measureText(kw).width;
+        ctx.fillRect(x + beforeWidth, y - 12, kwWidth, 16);
+        ctx.fillStyle = SYNTAX.KEYWORD_COLOR;
+        ctx.fillText(kw, x + beforeWidth, y);
+      }
+    });
+
+    // Step 3: strings in green
+    const strRe = /"[^"]*"|'[^']*'/g;
+    let m;
+    while ((m = strRe.exec(slice)) !== null) {
+      const before = slice.substring(0, m.index);
+      const beforeWidth = ctx.measureText(before).width;
+      const strWidth = ctx.measureText(m[0]).width;
+      ctx.fillStyle = '#0A1426';
+      ctx.fillRect(x + beforeWidth, y - 12, strWidth, 16);
+      ctx.fillStyle = SYNTAX.STRING_COLOR;
+      ctx.fillText(m[0], x + beforeWidth, y);
+    }
+  }
 
   function renderBuilder(t) {
-    ctx.fillStyle = '#0D1B2A';
+    // Editor background (deep navy)
+    ctx.fillStyle = '#0A1426';
     ctx.fillRect(0, 36, W, H - 36);
 
-    // Title
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 18px "Noto Sans JP"';
-    ctx.fillText('業務システム · No-Code Builder', 50, 80);
+    // Activity bar (left)
+    ctx.fillStyle = '#070F1C';
+    ctx.fillRect(0, 36, 50, H - 36);
     ctx.fillStyle = ACCENT;
-    ctx.font = '13px "Noto Sans JP"';
-    ctx.fillText('AI が業務に合わせて自動構築中', 50, 102);
-
-    // Grid background pattern
-    ctx.strokeStyle = 'rgba(201, 168, 76, 0.06)';
-    ctx.lineWidth = 1;
-    for (let gx = 0; gx < W; gx += 40) {
-      ctx.beginPath();
-      ctx.moveTo(gx, 130); ctx.lineTo(gx, H);
-      ctx.stroke();
-    }
-    for (let gy = 130; gy < H; gy += 40) {
-      ctx.beginPath();
-      ctx.moveTo(0, gy); ctx.lineTo(W, gy);
-      ctx.stroke();
-    }
-
-    const offsetY = 220;
-
-    // Blocks fly in with stagger
-    const STAGGER = 0.45;
-    SYS_BLOCKS.forEach((b, i) => {
-      const localT = t - i * STAGGER;
-      if (localT < 0) return;
-      const ease = Math.min(1, 1 - Math.pow(1 - Math.min(1, localT * 2), 3));
-      const startY = b.y + offsetY + 80;
-      const targetY = b.y + offsetY;
-      const y = startY + (targetY - startY) * ease;
-      const opacity = Math.min(1, localT * 2);
-
-      ctx.globalAlpha = opacity;
-      // Block fill
-      ctx.fillStyle = b.accent ? ACCENT : '#1B2A4A';
-      ctx.fillRect(b.x, y, b.w, b.h);
-      // Border
-      ctx.strokeStyle = b.accent ? '#FFFFFF' : ACCENT;
-      ctx.lineWidth = 1.8;
-      ctx.strokeRect(b.x, y, b.w, b.h);
-      // Pulse outline for AI Layer
-      if (b.accent) {
-        const pulse = 0.5 + Math.sin(t * 3) * 0.5;
-        ctx.strokeStyle = `rgba(201, 168, 76, ${pulse * 0.7})`;
-        ctx.lineWidth = 4;
-        ctx.strokeRect(b.x - 4, y - 4, b.w + 8, b.h + 8);
+    ctx.fillRect(0, 60, 3, 26);
+    // Activity icons (placeholders)
+    ctx.fillStyle = '#3A3A52';
+    [60, 100, 140, 180].forEach((y) => {
+      ctx.fillRect(16, y + 6, 18, 14);
+      if (y === 60) {
+        ctx.fillStyle = ACCENT;
+        ctx.fillRect(16, y + 6, 18, 14);
+        ctx.fillStyle = '#3A3A52';
       }
-      // Label
-      ctx.fillStyle = b.accent ? '#0D1B2A' : '#FFFFFF';
-      ctx.font = 'bold 14px "Noto Sans JP"';
-      ctx.textAlign = 'center';
-      ctx.fillText(b.label, b.x + b.w / 2, y + b.h / 2 + 5);
-      ctx.textAlign = 'left';
-      ctx.globalAlpha = 1;
     });
 
-    // Links — drawn after both blocks have appeared
-    ctx.strokeStyle = ACCENT;
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([4, 4]);
-    SYS_LINKS.forEach(([a, b]) => {
-      const aT = t - a * STAGGER;
-      const bT = t - b * STAGGER;
-      if (aT < 0.5 || bT < 0.5) return;
-      const linkProgress = Math.min(1, (Math.min(aT, bT) - 0.5) * 2);
-      const A = SYS_BLOCKS[a];
-      const B = SYS_BLOCKS[b];
-      const ax = A.x + A.w / 2;
-      const ay = A.y + offsetY + A.h / 2;
-      const bx = B.x + B.w / 2;
-      const by = B.y + offsetY + B.h / 2;
+    // Tab bar
+    ctx.fillStyle = '#1B2A4A';
+    ctx.fillRect(50, 36, W - 50, 38);
+    // Active tab
+    ctx.fillStyle = '#0A1426';
+    ctx.fillRect(60, 38, 200, 36);
+    ctx.fillStyle = ACCENT;
+    ctx.fillRect(60, 38, 3, 36);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '13px "Courier New", monospace';
+    ctx.fillText('orderApi.ts', 78, 60);
+    // Inactive tabs
+    ctx.fillStyle = '#5C7A99';
+    ctx.fillText('inventory.ts', 280, 60);
+    ctx.fillText('users.ts', 410, 60);
+    // Modified dot on active tab
+    ctx.fillStyle = ACCENT;
+    ctx.beginPath();
+    ctx.arc(238, 56, 4, 0, Math.PI * 2);
+    ctx.fill();
 
-      ctx.globalAlpha = linkProgress * 0.8;
-      ctx.beginPath();
-      ctx.moveTo(ax, ay);
-      ctx.lineTo(ax + (bx - ax) * linkProgress, ay + (by - ay) * linkProgress);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-    });
-    ctx.setLineDash([]);
+    // Line number gutter
+    const gutterX = 50;
+    const gutterW = 44;
+    ctx.fillStyle = '#070F1C';
+    ctx.fillRect(gutterX, 74, gutterW, H - 74 - 26);
 
-    // Progress
-    const completed = SYS_BLOCKS.filter((_, i) => t > i * STAGGER + 0.3).length;
-    if (completed === SYS_BLOCKS.length) {
-      ctx.fillStyle = ACCENT;
-      ctx.font = 'bold 15px "Noto Sans JP"';
-      ctx.fillText(`✓ システム構築完了 (${completed} / ${SYS_BLOCKS.length} コンポーネント)`, 50, H - 24);
-    } else {
-      ctx.fillStyle = ACCENT;
-      ctx.font = 'bold 15px "Noto Sans JP"';
-      ctx.fillText(`● 構築中 ${completed} / ${SYS_BLOCKS.length} コンポーネント`, 50, H - 24);
+    const codeStartX = gutterX + gutterW + 16;
+    const codeStartY = 100;
+    const lineH = 22;
+
+    // Render line numbers (always visible)
+    ctx.font = '12px "Courier New", monospace';
+    ctx.fillStyle = '#3A3A52';
+    ctx.textAlign = 'right';
+    for (let i = 0; i < CODE_LINES.length; i++) {
+      ctx.fillText(String(i + 1), gutterX + gutterW - 8, codeStartY + i * lineH);
     }
+    ctx.textAlign = 'left';
+
+    // Type code progressively
+    const TYPE_SPEED = 38;
+    let charsLeft = Math.floor(t * TYPE_SPEED);
+    let cursorX = codeStartX;
+    let cursorY = codeStartY;
+    let activeLineIdx = 0;
+
+    for (let i = 0; i < CODE_LINES.length; i++) {
+      const line = CODE_LINES[i];
+      const y = codeStartY + i * lineH;
+      const lineLen = Math.max(line.text.length, 1);
+
+      if (charsLeft <= 0) break;
+
+      const slice = line.text.substring(0, Math.min(line.text.length, charsLeft));
+
+      // Highlight current line bg
+      if (charsLeft < lineLen) {
+        ctx.fillStyle = 'rgba(201, 168, 76, 0.06)';
+        ctx.fillRect(gutterX + gutterW, y - 16, W - gutterX - gutterW, 22);
+        // Update line number to gold
+        ctx.fillStyle = ACCENT;
+        ctx.font = '12px "Courier New", monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(String(i + 1), gutterX + gutterW - 8, y);
+        ctx.textAlign = 'left';
+      }
+
+      if (line.text.length > 0) {
+        renderHighlightedCodeLine(slice, line, codeStartX, y);
+      }
+
+      activeLineIdx = i + 1;
+
+      if (slice.length < line.text.length) {
+        cursorX = codeStartX + ctx.measureText(slice).width;
+        cursorY = y;
+        charsLeft = 0;
+        break;
+      }
+
+      charsLeft -= lineLen;
+      cursorX = codeStartX;
+      cursorY = y + lineH;
+    }
+
+    // Blinking cursor
+    if (Math.floor(t * 2.5) % 2 === 0) {
+      ctx.fillStyle = ACCENT;
+      ctx.fillRect(cursorX + 2, cursorY - 14, 2, 17);
+    }
+
+    // AI completion popup near the cursor (during typing, with gentle delay)
+    if (t > 1.5 && t < (CODE_LINES.reduce((a, l) => a + Math.max(l.text.length, 1), 0) / TYPE_SPEED) + 0.5) {
+      const cyclePhase = (t * 0.4) % 3;
+      // Popup visible for first portion of each cycle
+      if (cyclePhase < 1.5) {
+        const opacity = cyclePhase < 0.2 ? cyclePhase / 0.2 :
+                        cyclePhase > 1.3 ? (1.5 - cyclePhase) / 0.2 : 1;
+        const popX = Math.min(W - 280, cursorX + 12);
+        const popY = Math.min(H - 90, cursorY + 10);
+
+        ctx.globalAlpha = opacity;
+        // Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(popX + 3, popY + 3, 240, 56);
+        // Box
+        ctx.fillStyle = '#1B2A4A';
+        ctx.fillRect(popX, popY, 240, 56);
+        ctx.strokeStyle = ACCENT;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(popX, popY, 240, 56);
+        // Content
+        ctx.fillStyle = ACCENT;
+        ctx.font = 'bold 12px "Noto Sans JP"';
+        ctx.fillText('✨ AI Suggestion', popX + 12, popY + 22);
+        ctx.fillStyle = '#A8B2C8';
+        ctx.font = '11px "Courier New", monospace';
+        ctx.fillText('Press Tab to accept', popX + 12, popY + 42);
+        // Tab key
+        const pulse = 0.5 + Math.sin(t * 4) * 0.5;
+        ctx.fillStyle = `rgba(201, 168, 76, ${0.25 + pulse * 0.4})`;
+        ctx.fillRect(popX + 200, popY + 32, 28, 16);
+        ctx.strokeStyle = ACCENT;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(popX + 200, popY + 32, 28, 16);
+        ctx.fillStyle = ACCENT;
+        ctx.font = 'bold 10px "Courier New", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('Tab', popX + 214, popY + 44);
+        ctx.textAlign = 'left';
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // Status bar (bottom)
+    ctx.fillStyle = ACCENT;
+    ctx.fillRect(0, H - 26, W, 26);
+    ctx.fillStyle = '#0A1426';
+    ctx.font = 'bold 11px "Courier New", monospace';
+    ctx.fillText('● AI assist active', 60, H - 10);
+    ctx.fillText('TypeScript', 220, H - 10);
+    ctx.fillText('UTF-8', 320, H - 10);
+    ctx.textAlign = 'right';
+    const totalChars = CODE_LINES.reduce((a, l) => a + Math.max(l.text.length, 1), 0);
+    const typedChars = Math.min(totalChars, Math.floor(t * TYPE_SPEED));
+    ctx.fillText(`Ln ${activeLineIdx}, Generated ${typedChars} chars`, W - 16, H - 10);
+    ctx.textAlign = 'left';
   }
 
   // ─────────────────────────────────────────────────────────
