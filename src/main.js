@@ -30,46 +30,55 @@ const fadeObserver = new IntersectionObserver(
 );
 document.querySelectorAll('.fade-in').forEach((el) => fadeObserver.observe(el));
 
-// ── Scroll-driven flip animation for use case cards ──
-// Rotation is bound directly to scroll position via ScrollTrigger scrub.
+// ── Stacked card deck animation (scroll-pinned, page-flip reveal) ──
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stackSection = document.querySelector('#usecases-stack');
 
-if (!prefersReducedMotion) {
-  document.querySelectorAll('.flip-card').forEach((card) => {
-    const isRight = card.classList.contains('flip-right');
-    const isTop   = card.classList.contains('flip-top');
+if (stackSection && !prefersReducedMotion) {
+  const cards = stackSection.querySelectorAll('.stack-card');
+  const N = cards.length;
 
-    const initial = {
-      opacity: 0,
-      transformPerspective: 1600,
-      transformOrigin: isTop
-        ? 'top center'
-        : (isRight ? 'right center' : 'left center'),
-    };
-    if (isTop) {
-      initial.rotateX = -55;
-    } else {
-      initial.rotateY = isRight ? 65 : -65;
-    }
-    gsap.set(card, initial);
-
-    gsap.to(card, {
-      opacity: 1,
+  // Initial state: stack with z-index, top card visible, rest underneath
+  cards.forEach((card, i) => {
+    gsap.set(card, {
+      zIndex: N - i,
+      transformOrigin: 'top center',
+      transformPerspective: 2400,
       rotateX: 0,
-      rotateY: 0,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: card,
-        start: 'top 92%',  // begin when card top reaches 92% of viewport height
-        end:   'top 45%',  // complete when card top reaches 45%
-        scrub: 1,           // smooth scrub with 1s catch-up
-      },
+      opacity: 1,
     });
   });
-} else {
-  // Reduced motion: just show all cards
-  document.querySelectorAll('.flip-card').forEach((card) => {
-    gsap.set(card, { opacity: 1, rotateX: 0, rotateY: 0 });
+
+  // Master timeline pinned to section
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: stackSection,
+      start: 'top top',
+      end: () => `+=${(N - 1) * window.innerHeight}`,
+      pin: true,
+      pinSpacing: true,
+      scrub: 1,
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+      onUpdate: (self) => {
+        // Update progress indicator (which card is currently in view)
+        const idx = Math.min(N - 1, Math.floor(self.progress * (N - 1)) + (self.progress > 0 ? 1 : 0));
+        const indicator = document.getElementById('stack-progress-current');
+        if (indicator) {
+          indicator.textContent = String(idx + (self.progress > 0 ? 0 : 1)).padStart(2, '0');
+        }
+      },
+    },
+  });
+
+  // For each card except the last, animate it flipping AWAY (revealing the one below)
+  cards.forEach((card, i) => {
+    if (i === N - 1) return;
+    tl.to(card, {
+      rotateX: -85,
+      opacity: 0,
+      ease: 'power1.in',
+    }, i);
   });
 }
 

@@ -106,11 +106,41 @@
   .delay-4 { transition-delay: 0.4s; }
   .delay-5 { transition-delay: 0.5s; }
 
-  /* ── Card flip (initial state to prevent FOUC; GSAP animates) ── */
-  .flip-card {
-    opacity: 0;
+  /* ── Stacked card "deck flip" (Awwwards-style scroll-pinned reveal) ── */
+  .stack-section {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    perspective: 2400px;
+    background-color: #FAF7F2;
+  }
+  .stack-deck {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+  }
+  .stack-card {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #FFFFFF;
+    border: 1px solid #E8E2D5;
     backface-visibility: hidden;
     will-change: transform, opacity;
+    overflow: hidden;
+  }
+  .stack-card-dark {
+    background-color: #0D1B2A;
+    color: #FFFFFF;
+    border-color: #C9A84C;
+  }
+
+  /* Legacy flip-card (kept for backward compatibility but unused now) */
+  .flip-card {
+    opacity: 1;
   }
 
   @media (prefers-reduced-motion: reduce) {
