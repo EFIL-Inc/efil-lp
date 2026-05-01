@@ -47,6 +47,48 @@
     min-height: 280px;
   }
 
+  /* Hero card — first use case, takes full width with side-by-side text + 3D */
+  .usecase-card-hero {
+    @apply relative bg-white border border-line-200 overflow-hidden
+           transition-all duration-300
+           hover:border-gold-500;
+  }
+  .usecase-canvas-hero {
+    @apply block w-full bg-cream-100;
+    aspect-ratio: 1 / 1;
+    min-height: 380px;
+  }
+
+  /* Compact use case card (3-column variant) */
+  .usecase-card-compact {
+    @apply relative bg-white border border-line-200 overflow-hidden
+           transition-all duration-300
+           hover:border-gold-500
+           p-7 md:p-8;
+  }
+
+  /* Mega numerical display (editorial-style stat) */
+  .stat-mega {
+    @apply font-serif font-bold text-gold-700 tracking-tightest;
+    line-height: 0.85;
+  }
+
+  /* Editorial pull quote */
+  .editorial-quote {
+    @apply font-serif italic font-bold text-ink-900 tracking-tightest;
+    line-height: 1.35;
+  }
+
+  /* Decorative giant section number (background) */
+  .deco-section-num {
+    @apply absolute font-serif font-black text-line-200 select-none pointer-events-none;
+    font-size: clamp(180px, 22vw, 360px);
+    line-height: 0.8;
+    top: 40px;
+    right: -20px;
+    z-index: 0;
+  }
+
   .rule-gold { @apply block w-12 h-px bg-gold-600; }
 }
 
