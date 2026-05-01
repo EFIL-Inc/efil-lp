@@ -16,35 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@700&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          navy: { 950: '#070F1C', 900: '#0D1B2A', 800: '#1B2A4A', 700: '#2A3A5C' },
-          gold: { 500: '#C9A84C', 600: '#B2923A' },
-          ink:  { 900: '#1A1A2E', 500: '#6B7A99', 300: '#A8B2C8' },
-          line: { 200: '#E5E7EB', 700: '#2A3A5C' },
-        },
-        fontFamily: {
-          serif: ['"Noto Serif JP"', 'serif'],
-          sans:  ['"Noto Sans JP"', 'sans-serif'],
-        },
-        maxWidth: {
-          'narrow':  '720px',
-          'content': '1120px',
-        },
-      },
-    },
-  };
-</script>
-<style type="text/tailwindcss">
-  @layer base {
-    body { @apply font-sans text-base text-white bg-navy-900 antialiased leading-relaxed; }
-    h1, h2 { @apply font-serif; }
-  }
-</style>
+<script type="module" src="/src/privacy.js"></script>
 </head>
 <body>
 
