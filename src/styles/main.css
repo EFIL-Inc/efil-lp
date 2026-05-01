@@ -40,9 +40,20 @@
            transition-all duration-300
            hover:border-gold-500;
   }
-
   .usecase-canvas {
     @apply w-full aspect-[4/3] bg-navy-950 border border-line-700 mb-6;
+  }
+
+  /* Larger / immersive variant */
+  .usecase-card-large {
+    @apply relative bg-navy-800 border border-line-700 overflow-hidden
+           transition-all duration-300
+           hover:border-gold-500;
+  }
+  .usecase-canvas-large {
+    @apply block w-full bg-navy-950 border-b border-line-700;
+    aspect-ratio: 16 / 10;
+    min-height: 280px;
   }
 
   .rule-gold { @apply block w-12 h-px bg-gold-500; }
