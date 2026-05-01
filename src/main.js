@@ -2,17 +2,19 @@ import './styles/main.css';
 import { createMeetingScene } from './three/meeting-scene.js';
 import { createHeroScene } from './three/hero-scene.js';
 import Lenis from 'lenis';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Smooth scroll
+gsap.registerPlugin(ScrollTrigger);
+
+// Smooth scroll (Lenis) — wired into GSAP ScrollTrigger
 const lenis = new Lenis({
   duration: 1.1,
   easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
 });
-function raf(time) {
-  lenis.raf(time);
-  requestAnimationFrame(raf);
-}
-requestAnimationFrame(raf);
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add((time) => { lenis.raf(time * 1000); });
+gsap.ticker.lagSmoothing(0);
 
 // Fade-in observer
 const fadeObserver = new IntersectionObserver(
@@ -26,7 +28,50 @@ const fadeObserver = new IntersectionObserver(
   },
   { threshold: 0.12 },
 );
-document.querySelectorAll('.fade-in, .flip-card').forEach((el) => fadeObserver.observe(el));
+document.querySelectorAll('.fade-in').forEach((el) => fadeObserver.observe(el));
+
+// ── Scroll-driven flip animation for use case cards ──
+// Rotation is bound directly to scroll position via ScrollTrigger scrub.
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+if (!prefersReducedMotion) {
+  document.querySelectorAll('.flip-card').forEach((card) => {
+    const isRight = card.classList.contains('flip-right');
+    const isTop   = card.classList.contains('flip-top');
+
+    const initial = {
+      opacity: 0,
+      transformPerspective: 1600,
+      transformOrigin: isTop
+        ? 'top center'
+        : (isRight ? 'right center' : 'left center'),
+    };
+    if (isTop) {
+      initial.rotateX = -55;
+    } else {
+      initial.rotateY = isRight ? 65 : -65;
+    }
+    gsap.set(card, initial);
+
+    gsap.to(card, {
+      opacity: 1,
+      rotateX: 0,
+      rotateY: 0,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: card,
+        start: 'top 92%',  // begin when card top reaches 92% of viewport height
+        end:   'top 45%',  // complete when card top reaches 45%
+        scrub: 1,           // smooth scrub with 1s catch-up
+      },
+    });
+  });
+} else {
+  // Reduced motion: just show all cards
+  document.querySelectorAll('.flip-card').forEach((card) => {
+    gsap.set(card, { opacity: 1, rotateX: 0, rotateY: 0 });
+  });
+}
 
 // Hero: always-on background scene
 const heroCanvas = document.querySelector('canvas[data-scene="hero"]');
