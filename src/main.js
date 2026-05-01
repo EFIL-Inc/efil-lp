@@ -26,7 +26,7 @@ const fadeObserver = new IntersectionObserver(
   },
   { threshold: 0.12 },
 );
-document.querySelectorAll('.fade-in').forEach((el) => fadeObserver.observe(el));
+document.querySelectorAll('.fade-in, .flip-card').forEach((el) => fadeObserver.observe(el));
 
 // Hero: always-on background scene
 const heroCanvas = document.querySelector('canvas[data-scene="hero"]');
