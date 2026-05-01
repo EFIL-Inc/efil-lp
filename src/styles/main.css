@@ -5,7 +5,7 @@
 @layer base {
   html { scroll-behavior: smooth; }
   body {
-    @apply font-sans text-body text-white bg-navy-900 antialiased;
+    @apply font-sans text-body text-ink-900 bg-cream-50 antialiased;
   }
   h1, h2 { @apply font-serif; }
 }
@@ -14,49 +14,40 @@
   .container-narrow { @apply mx-auto w-full max-w-content px-6 md:px-10; }
   .container-wide   { @apply mx-auto w-full max-w-wide px-6 md:px-10; }
   .container-text   { @apply mx-auto w-full max-w-narrow px-6 md:px-0; }
+
   .section          { @apply py-section relative overflow-hidden; }
+  .section-light    { @apply bg-cream-50 text-ink-900; }
+  .section-paper    { @apply bg-white text-ink-900; }
   .section-dark     { @apply bg-navy-900 text-white; }
-  .section-sub      { @apply bg-navy-800 text-white; }
-  .section-light    { @apply bg-white text-ink-900; }
 
   .heading-display { @apply font-serif font-bold text-display tracking-tightest; }
   .heading-serif   { @apply font-serif font-bold text-h2 tracking-tightest; }
   .heading-card    { @apply font-sans font-semibold text-h3; }
-  .label-eyebrow   { @apply font-sans text-label uppercase text-gold-500; }
+  .label-eyebrow   { @apply font-sans text-label uppercase text-gold-700; }
 
   .btn-cta {
     @apply relative inline-flex items-center justify-center
            px-10 py-4 bg-gold-500 text-navy-900
            font-sans font-semibold text-[15px] tracking-wide
            border border-gold-500 transition-all duration-300
-           hover:bg-gold-600 hover:border-gold-600
+           hover:bg-gold-600 hover:border-gold-600 hover:text-white
            focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-gold-500;
   }
   .btn-cta .arrow { @apply inline-block ml-3 transition-transform duration-300; }
   .btn-cta:hover .arrow { @apply translate-x-1; }
 
-  .usecase-card {
-    @apply relative bg-navy-800 border border-line-700 p-6 md:p-8
-           transition-all duration-300
-           hover:border-gold-500;
-  }
-  .usecase-canvas {
-    @apply w-full aspect-[4/3] bg-navy-950 border border-line-700 mb-6;
-  }
-
-  /* Larger / immersive variant */
   .usecase-card-large {
-    @apply relative bg-navy-800 border border-line-700 overflow-hidden
+    @apply relative bg-white border border-line-200 overflow-hidden
            transition-all duration-300
            hover:border-gold-500;
   }
   .usecase-canvas-large {
-    @apply block w-full bg-navy-950 border-b border-line-700;
+    @apply block w-full bg-cream-100 border-b border-line-200;
     aspect-ratio: 16 / 10;
     min-height: 280px;
   }
 
-  .rule-gold { @apply block w-12 h-px bg-gold-500; }
+  .rule-gold { @apply block w-12 h-px bg-gold-600; }
 }
 
 @layer utilities {

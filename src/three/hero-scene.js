@@ -1,21 +1,23 @@
 import * as THREE from 'three';
 
 /**
- * Hero background scene v2: Office workflow → AI simplification.
+ * Hero scene v3 — Bright office workflow simplified by AI.
  *
- * Visual narrative (perpetual loop):
- *   1. Stylized "office tasks" (documents, envelopes, calendar/grid sheets,
- *      checklists) drift in from the periphery toward the center.
- *   2. As they approach a central golden AI core, they shrink and fade,
- *      converted into rising golden "completed" sparks.
- *   3. New tasks spawn at the periphery — the cycle repeats.
- *
- * A faint wireframe floor grid evokes a desk/office surface without being literal.
- * Soft top-down lighting + warm gold rim light suggest a workspace.
+ * Tuned for a CREAM (#FAF7F2) page background:
+ * - Fog tinted to cream so meshes blend into bg at distance
+ * - Floor wireframe is warm gray (visible on cream)
+ * - Atmospheric particles use deep gold + warm gray for visibility on light bg
+ * - Task glyph textures have stronger borders for contrast on cream
+ * - AI core retains its luminous gold appearance
  */
 export function createHeroScene(canvas) {
+  const BG_COLOR = 0xFAF7F2; // cream-50
+  const FLOOR_COLOR = 0xC8BEA5; // warmer line on cream
+  const PARTICLE_DIM = new THREE.Color(0x9AA3B5);
+  const PARTICLE_GOLD = new THREE.Color(0xB8860B);
+
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x070f1c, 0.05);
+  scene.fog = new THREE.FogExp2(BG_COLOR, 0.05);
 
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -30,59 +32,56 @@ export function createHeroScene(canvas) {
   camera.position.set(0, 1.6, 14);
   camera.lookAt(0, 0, 0);
 
-  // ------------------------ Lighting ------------------------
-  scene.add(new THREE.AmbientLight(0xffffff, 0.35));
-  const topLight = new THREE.DirectionalLight(0xfff4dc, 0.9);
+  // ── Lighting (warm office) ──
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const topLight = new THREE.DirectionalLight(0xfff4dc, 0.6);
   topLight.position.set(0, 12, 6);
   scene.add(topLight);
-  const goldRim = new THREE.PointLight(0xc9a84c, 1.6, 18);
+  const goldRim = new THREE.PointLight(0xC9A84C, 1.2, 18);
   goldRim.position.set(0, 0, 0);
   scene.add(goldRim);
 
-  // ------------------------ Floor grid (desk/office surface) ------------------------
+  // ── Floor wireframe (warm gray on cream) ──
   const floorGeo = new THREE.PlaneGeometry(50, 50, 24, 24);
   const floorMat = new THREE.MeshBasicMaterial({
-    color: 0x2a3a5c,
+    color: FLOOR_COLOR,
     wireframe: true,
     transparent: true,
-    opacity: 0.18,
+    opacity: 0.35,
   });
   const floor = new THREE.Mesh(floorGeo, floorMat);
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = -2.6;
   scene.add(floor);
 
-  // ------------------------ Atmospheric particles (dust / data) ------------------------
-  const ATM_COUNT = 900;
+  // ── Atmospheric particles ──
+  const ATM_COUNT = 600;
   const atmPositions = new Float32Array(ATM_COUNT * 3);
   const atmColors = new Float32Array(ATM_COUNT * 3);
-  const dimC = new THREE.Color(0x3a4a6c);
-  const goldC = new THREE.Color(0xC9A84C);
   for (let i = 0; i < ATM_COUNT; i++) {
-    const r = Math.pow(Math.random(), 0.5) * 18 + 2;
+    const r = Math.pow(Math.random(), 0.5) * 16 + 2;
     const a = Math.random() * Math.PI * 2;
     atmPositions[i * 3]     = Math.cos(a) * r;
-    atmPositions[i * 3 + 1] = (Math.random() - 0.4) * 8;
-    atmPositions[i * 3 + 2] = Math.sin(a) * r - Math.random() * 8;
-    const c = Math.random() < 0.12 ? goldC : dimC;
+    atmPositions[i * 3 + 1] = (Math.random() - 0.4) * 7;
+    atmPositions[i * 3 + 2] = Math.sin(a) * r - Math.random() * 6;
+    const c = Math.random() < 0.18 ? PARTICLE_GOLD : PARTICLE_DIM;
     atmColors[i * 3] = c.r; atmColors[i * 3 + 1] = c.g; atmColors[i * 3 + 2] = c.b;
   }
   const atmGeo = new THREE.BufferGeometry();
   atmGeo.setAttribute('position', new THREE.BufferAttribute(atmPositions, 3));
   atmGeo.setAttribute('color', new THREE.BufferAttribute(atmColors, 3));
   const atmMat = new THREE.PointsMaterial({
-    size: 0.06,
+    size: 0.07,
     vertexColors: true,
     transparent: true,
-    opacity: 0.7,
+    opacity: 0.55,
     sizeAttenuation: true,
-    blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
   const atmPoints = new THREE.Points(atmGeo, atmMat);
   scene.add(atmPoints);
 
-  // ------------------------ AI core (gold sphere + halos) ------------------------
+  // ── AI core ──
   const coreGroup = new THREE.Group();
   scene.add(coreGroup);
 
@@ -93,53 +92,54 @@ export function createHeroScene(canvas) {
   coreGroup.add(core);
 
   const ring1Mat = new THREE.MeshBasicMaterial({
-    color: 0xC9A84C, transparent: true, opacity: 0.5, side: THREE.DoubleSide,
+    color: 0xB8860B, transparent: true, opacity: 0.55, side: THREE.DoubleSide,
   });
   const ring1 = new THREE.Mesh(new THREE.RingGeometry(0.85, 0.95, 64), ring1Mat);
   coreGroup.add(ring1);
 
   const ring2Mat = new THREE.MeshBasicMaterial({
-    color: 0xC9A84C, transparent: true, opacity: 0.25, side: THREE.DoubleSide,
+    color: 0xB8860B, transparent: true, opacity: 0.3, side: THREE.DoubleSide,
   });
   const ring2 = new THREE.Mesh(new THREE.RingGeometry(1.4, 1.5, 64), ring2Mat);
   coreGroup.add(ring2);
 
-  // ------------------------ Office task glyphs ------------------------
-  // Pre-generate small canvas textures for each "task type"
+  // ── Office task glyphs (light bg variant: stronger borders) ──
   function makeTaskTexture(type) {
     const c = document.createElement('canvas');
     c.width = 128; c.height = 128;
     const ctx = c.getContext('2d');
     ctx.clearRect(0, 0, 128, 128);
-    ctx.fillStyle = '#f0f2f6';
+
+    // Soft drop-shadow effect via dark border
+    ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(8, 8, 112, 112);
-    ctx.strokeStyle = '#cdd1d8';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#7A6225';
+    ctx.lineWidth = 2.5;
     ctx.strokeRect(8, 8, 112, 112);
 
     if (type === 'doc') {
-      ctx.fillStyle = '#6b7a99';
+      ctx.fillStyle = '#3A3A52';
       for (let i = 0; i < 6; i++) {
         ctx.fillRect(20, 26 + i * 14, 88 - (i % 3) * 14, 4);
       }
     } else if (type === 'mail') {
-      ctx.strokeStyle = '#6b7a99';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#3A3A52';
+      ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(8, 28); ctx.lineTo(64, 78); ctx.lineTo(120, 28);
       ctx.stroke();
     } else if (type === 'calendar') {
-      ctx.fillStyle = '#1B2A4A';
+      ctx.fillStyle = '#1F2937';
       ctx.fillRect(8, 8, 112, 22);
-      ctx.fillStyle = '#6b7a99';
+      ctx.fillStyle = '#3A3A52';
       for (let r = 0; r < 4; r++) {
         for (let cIdx = 0; cIdx < 6; cIdx++) {
           ctx.fillRect(18 + cIdx * 16, 42 + r * 18, 12, 12);
         }
       }
     } else if (type === 'check') {
-      ctx.strokeStyle = '#6b7a99';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#3A3A52';
+      ctx.lineWidth = 2.5;
       for (let i = 0; i < 4; i++) {
         ctx.strokeRect(20, 28 + i * 18, 12, 12);
         ctx.beginPath();
@@ -147,8 +147,8 @@ export function createHeroScene(canvas) {
         ctx.stroke();
       }
     } else if (type === 'spread') {
-      ctx.strokeStyle = '#6b7a99';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#3A3A52';
+      ctx.lineWidth = 1.5;
       for (let r = 0; r <= 6; r++) {
         ctx.beginPath();
         ctx.moveTo(8, 14 + r * 17); ctx.lineTo(120, 14 + r * 17);
@@ -179,7 +179,7 @@ export function createHeroScene(canvas) {
     task.target.set(0, Math.random() * 0.5 - 0.25, 0);
     task.startPos.copy(task.mesh.position);
     task.progress = 0;
-    task.duration = 6 + Math.random() * 6; // seconds
+    task.duration = 6 + Math.random() * 6;
     task.spinAxis.set(
       Math.random() - 0.5,
       Math.random() - 0.5,
@@ -188,10 +188,8 @@ export function createHeroScene(canvas) {
     task.spinSpeed = 0.3 + Math.random() * 0.5;
     task.mesh.scale.setScalar(1);
     task.mesh.material.opacity = 0;
-    // pick a fresh texture
     const ti = Math.floor(Math.random() * taskTextures.length);
     task.mesh.material.map = taskTextures[ti];
-    // size variants by type
     const sx = (ti === 1) ? 1.0 : (ti === 2 ? 0.85 : 0.75);
     const sy = (ti === 1) ? 0.6 : (ti === 2 ? 0.85 : 1.0);
     task.mesh.geometry.dispose();
@@ -201,8 +199,8 @@ export function createHeroScene(canvas) {
   for (let i = 0; i < TASK_COUNT; i++) {
     const mat = new THREE.MeshStandardMaterial({
       map: taskTextures[i % taskTextures.length],
-      roughness: 0.55,
-      metalness: 0.05,
+      roughness: 0.7,
+      metalness: 0.0,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0,
@@ -218,29 +216,27 @@ export function createHeroScene(canvas) {
       duration: 6,
     };
     spawnTask(task);
-    // distribute initial progress so they're staggered
     task.progress = Math.random();
     scene.add(mesh);
     tasks.push(task);
   }
 
-  // ------------------------ Completion sparks (rising gold dots after AI processes) ------------------------
+  // ── Completion sparks ──
   const SPARK_COUNT = 80;
   const sparkPos = new Float32Array(SPARK_COUNT * 3);
   const sparkLife = new Float32Array(SPARK_COUNT);
   for (let i = 0; i < SPARK_COUNT; i++) {
     sparkPos[i * 3] = 0; sparkPos[i * 3 + 1] = 0; sparkPos[i * 3 + 2] = 0;
-    sparkLife[i] = -1; // inactive
+    sparkLife[i] = -1;
   }
   const sparkGeo = new THREE.BufferGeometry();
   sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
   const sparkMat = new THREE.PointsMaterial({
-    color: 0xC9A84C,
-    size: 0.18,
+    color: 0xB8860B,
+    size: 0.2,
     transparent: true,
-    opacity: 0.9,
+    opacity: 0.95,
     sizeAttenuation: true,
-    blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
   const sparks = new THREE.Points(sparkGeo, sparkMat);
@@ -258,7 +254,7 @@ export function createHeroScene(canvas) {
     }
   }
 
-  // ------------------------ Mouse parallax ------------------------
+  // ── Mouse parallax ──
   const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
   const onMouseMove = (e) => {
     mouse.tx = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -266,30 +262,25 @@ export function createHeroScene(canvas) {
   };
   window.addEventListener('mousemove', onMouseMove, { passive: true });
 
-  // ------------------------ Animation loop ------------------------
   const clock = new THREE.Clock();
   let frameId;
-
   function easeInQuad(t) { return t * t; }
 
   function animate() {
     const dt = Math.min(clock.getDelta(), 0.05);
     const t = clock.getElapsedTime();
 
-    // Floor sway / drift
-    floor.material.opacity = 0.15 + Math.sin(t * 0.4) * 0.04;
+    floor.material.opacity = 0.32 + Math.sin(t * 0.4) * 0.05;
     atmPoints.rotation.y = t * 0.025;
 
-    // Core pulse
     const pulse = 1 + Math.sin(t * 1.6) * 0.08;
     core.scale.setScalar(pulse);
     ring1.rotation.z = t * 0.4;
     ring2.rotation.z = -t * 0.25;
-    ring1Mat.opacity = 0.4 + Math.sin(t * 1.6) * 0.15;
-    ring2Mat.opacity = 0.2 + Math.sin(t * 1.6 + 1) * 0.1;
-    goldRim.intensity = 1.4 + Math.sin(t * 1.6) * 0.4;
+    ring1Mat.opacity = 0.45 + Math.sin(t * 1.6) * 0.15;
+    ring2Mat.opacity = 0.25 + Math.sin(t * 1.6 + 1) * 0.1;
+    goldRim.intensity = 1.1 + Math.sin(t * 1.6) * 0.4;
 
-    // Update tasks
     tasks.forEach((task) => {
       task.progress += dt / task.duration;
       const p = task.progress;
@@ -298,35 +289,28 @@ export function createHeroScene(canvas) {
         spawnTask(task);
         return;
       }
-      // Move from startPos toward target with easing
       const e = easeInQuad(p);
       task.mesh.position.lerpVectors(task.startPos, task.target, e);
-      // Fade in then out
       const opacity = p < 0.15 ? p / 0.15 : Math.max(0, 1 - (p - 0.7) / 0.3);
-      task.mesh.material.opacity = opacity * 0.92;
-      // Shrink near end
+      task.mesh.material.opacity = opacity * 0.95;
       const scale = p < 0.7 ? 1 : Math.max(0.05, 1 - (p - 0.7) / 0.3);
       task.mesh.scale.setScalar(scale);
-      // Spin
       task.mesh.rotateOnAxis(task.spinAxis, dt * task.spinSpeed);
     });
 
-    // Update sparks (rise + fade)
     let sparkAttr = sparks.geometry.attributes.position;
     for (let i = 0; i < SPARK_COUNT; i++) {
       if (sparkLife[i] < 0) continue;
       sparkLife[i] -= dt * 0.45;
       if (sparkLife[i] < 0) {
-        sparkPos[i * 3 + 1] = -100; // hide
+        sparkPos[i * 3 + 1] = -100;
         continue;
       }
       sparkPos[i * 3 + 1] += dt * 1.2;
       sparkPos[i * 3] += Math.sin(t * 2 + i) * dt * 0.05;
     }
     sparkAttr.needsUpdate = true;
-    sparkMat.opacity = 0.9;
 
-    // Mouse parallax
     mouse.x += (mouse.tx - mouse.x) * 0.04;
     mouse.y += (mouse.ty - mouse.y) * 0.04;
     camera.position.x = mouse.x * 1.5;

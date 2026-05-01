@@ -4,10 +4,40 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy: { 950: '#070F1C', 900: '#0D1B2A', 800: '#1B2A4A', 700: '#2A3A5C' },
-        gold: { 400: '#D9BB66', 500: '#C9A84C', 600: '#B2923A' },
-        ink:  { 900: '#1A1A2E', 700: '#3A3A52', 500: '#6B7A99', 300: '#A8B2C8' },
-        line: { 200: '#E5E7EB', 700: '#2A3A5C' },
+        // ── New light palette (Warm Cream Office) ──
+        cream: {
+          50:  '#FAF7F2', // bg main
+          100: '#F5F1E8', // bg sub
+          200: '#EDE7D7', // panel
+        },
+        // Lines / borders
+        line: {
+          100: '#F0EDE5',
+          200: '#E8E2D5',
+          300: '#D5CFB8',
+          700: '#2A3A5C', // dark line (rarely used)
+        },
+        // Text (refined for light bg)
+        ink: {
+          900: '#1F2937', // body text
+          700: '#3A3A52',
+          500: '#6B7280', // sub text
+          300: '#A8B2C8',
+        },
+        // Accent (deeper gold reads better on light bg)
+        gold: {
+          400: '#D4B66B',
+          500: '#C9A84C', // brand
+          600: '#A88838', // hover
+          700: '#7A6225', // text on light bg
+        },
+        // Navy retained for CTAs / occasional dark surfaces
+        navy: {
+          950: '#070F1C',
+          900: '#0D1B2A',
+          800: '#1B2A4A',
+          700: '#2A3A5C',
+        },
       },
       fontFamily: {
         serif: ['"Noto Serif JP"', 'serif'],

@@ -9,7 +9,7 @@
 <meta property="og:description" content="ChatGPT に課金するだけでは、会社は変わりません。EFIL は会社の業務を AI で仕組み化します。">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="ja_JP">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230D1B2A'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' font-weight='700' fill='%23C9A84C' text-anchor='middle'%3EE%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23FAF7F2'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' font-weight='700' fill='%237A6225' text-anchor='middle'%3EE%3C/text%3E%3C/svg%3E">
 
 <!-- Microsoft Clarity -->
 <script type="text/javascript">
@@ -30,26 +30,23 @@
 
 <header class="absolute top-0 left-0 right-0 z-30">
   <div class="container-wide flex items-center justify-between py-6">
-    <a href="#top" class="font-serif font-bold text-xl tracking-tightest text-white">EFIL</a>
-    <a href="#contact" class="hidden md:inline-flex items-center font-sans text-small text-white hover:text-gold-500 transition-colors">
+    <a href="#top" class="font-serif font-bold text-xl tracking-tightest text-ink-900">EFIL</a>
+    <a href="#contact" class="hidden md:inline-flex items-center font-sans text-small text-ink-700 hover:text-gold-700 transition-colors">
       無料相談 <span class="inline-block ml-2">→</span>
     </a>
   </div>
 </header>
 
-<!-- ============================================================ -->
-<!-- 01. HERO  (Full-screen Three.js background)                  -->
-<!-- ============================================================ -->
-<section id="top" class="relative min-h-screen flex items-center bg-navy-900 overflow-hidden">
+<!-- 01. HERO  (Bright office + Three.js) -->
+<section id="top" class="relative min-h-screen flex items-center bg-cream-50 overflow-hidden">
 
-  <!-- Three.js full-screen background canvas -->
   <canvas data-scene="hero"
           class="absolute inset-0 w-full h-full z-0"
           aria-hidden="true"></canvas>
 
-  <!-- Subtle dark overlay for text legibility -->
+  <!-- Subtle gradient to keep text legible at left -->
   <div class="absolute inset-0 z-10 pointer-events-none"
-       style="background: radial-gradient(ellipse at center, rgba(13,27,42,0) 0%, rgba(13,27,42,0.6) 70%, rgba(13,27,42,0.85) 100%);"></div>
+       style="background: radial-gradient(ellipse at 30% 50%, rgba(250,247,242,0.85) 0%, rgba(250,247,242,0.4) 50%, rgba(250,247,242,0) 100%);"></div>
 
   <div class="container-wide w-full relative z-20 pt-24 md:pt-0">
     <div class="max-w-4xl">
@@ -58,25 +55,25 @@
         <span class="rule-gold mt-6 mb-8"></span>
       </div>
 
-      <h1 class="font-serif font-bold text-white tracking-tightest leading-[1.25] fade-in delay-1"
+      <h1 class="font-serif font-bold text-ink-900 tracking-tightest leading-[1.25] fade-in delay-1"
           style="font-size: clamp(38px, 6.5vw, 68px);">
         経営者の時間は、<br>
-        <span class="text-gold-500">AIで取り戻せます。</span>
+        <span class="text-gold-700">AIで取り戻せます。</span>
       </h1>
 
-      <p class="mt-8 font-serif text-xl md:text-2xl text-white/90 max-w-3xl fade-in delay-2 leading-relaxed">
+      <p class="mt-8 font-serif text-xl md:text-2xl text-ink-900 max-w-3xl fade-in delay-2 leading-relaxed">
         ChatGPT に毎月課金しても、会社は変わりません。<br>
-        変えるのは、AIを <span class="text-gold-500">"使う"</span> ではなく、AIを <span class="text-gold-500">"仕組み"</span> にすること。
+        変えるのは、AIを <span class="text-gold-700">"使う"</span> ではなく、AIを <span class="text-gold-700">"仕組み"</span> にすること。
       </p>
 
-      <p class="mt-6 text-body text-ink-300 max-w-2xl fade-in delay-3">
+      <p class="mt-6 text-body text-ink-700 max-w-2xl fade-in delay-3">
         EFIL は、中小企業の業務を AI で再設計します。<br>
         日々の作業から経営判断まで、"AIネイティブ経営" を実装するパートナーです。
       </p>
 
       <div class="mt-10 flex flex-col sm:flex-row items-start gap-4 fade-in delay-4">
         <a href="#contact" class="btn-cta">無料相談を申し込む<span class="arrow">→</span></a>
-        <a href="#usecases" class="inline-flex items-center px-2 py-4 text-small text-white/70 hover:text-gold-500 transition-colors">
+        <a href="#usecases" class="inline-flex items-center px-2 py-4 text-small text-ink-700 hover:text-gold-700 transition-colors">
           まず "できること" を見る ↓
         </a>
       </div>
@@ -84,16 +81,14 @@
   </div>
 </section>
 
-<!-- ============================================================ -->
-<!-- 02. USE CASES (Larger cards, 2-column layout)                -->
-<!-- ============================================================ -->
-<section id="usecases" class="section section-dark">
+<!-- 02. USE CASES -->
+<section id="usecases" class="section section-light border-t border-line-200">
   <div class="container-wide">
     <div class="max-w-2xl fade-in">
       <span class="label-eyebrow">01 &nbsp;What's Possible</span>
       <span class="rule-gold mt-6 mb-10"></span>
-      <h2 class="heading-serif text-white">こんなこと、もう<br>AIで当たり前です。</h2>
-      <p class="mt-8 text-body text-ink-300">
+      <h2 class="heading-serif text-ink-900">こんなこと、もう<br>AIで当たり前です。</h2>
+      <p class="mt-8 text-body text-ink-700">
         特別なスキルも、長期プロジェクトも要りません。<br>
         中小企業の経営者が、明日から取り戻せる業務を6つ。
       </p>
@@ -101,7 +96,6 @@
 
     <div class="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8">
 
-      <!-- Card 1: 議事録 (Three.js, full canvas) -->
       <article class="usecase-card-large fade-in">
         <canvas class="usecase-canvas-large"
                 data-scene="meeting"
@@ -111,137 +105,132 @@
             <span class="label-eyebrow">Use Case 01</span>
             <span class="text-small text-ink-500">Click canvas to replay</span>
           </div>
-          <h3 class="font-serif font-bold text-2xl text-white tracking-tightest">議事録、もう書きません</h3>
-          <p class="mt-4 text-body text-ink-300">録音すれば、AIが文字起こし→要約→チームに自動配信。会議終了と同時に議事録が完成します。</p>
+          <h3 class="font-serif font-bold text-2xl text-ink-900 tracking-tightest">議事録、もう書きません</h3>
+          <p class="mt-4 text-body text-ink-700">録音すれば、AIが文字起こし→要約→チームに自動配信。会議終了と同時に議事録が完成します。</p>
           <div class="mt-6 flex items-center gap-4">
             <span class="text-ink-500 line-through text-lg">90分</span>
-            <span class="text-gold-500 text-xl">→</span>
-            <span class="text-gold-500 font-serif font-bold text-3xl">0分</span>
+            <span class="text-gold-700 text-xl">→</span>
+            <span class="text-gold-700 font-serif font-bold text-3xl">0分</span>
           </div>
         </div>
       </article>
 
-      <!-- Card 2: メール -->
       <article class="usecase-card-large fade-in delay-1">
         <div class="usecase-canvas-large flex items-center justify-center text-ink-500 text-small">
           <span>3Dシーン準備中 (mail)</span>
         </div>
         <div class="p-8 md:p-10">
           <span class="label-eyebrow">Use Case 02</span>
-          <h3 class="mt-4 font-serif font-bold text-2xl text-white tracking-tightest">メール返信、AIが下書き</h3>
-          <p class="mt-4 text-body text-ink-300">過去のやり取りを学習したAIが、文体まで再現して下書きを生成。確認して送るだけ。</p>
+          <h3 class="mt-4 font-serif font-bold text-2xl text-ink-900 tracking-tightest">メール返信、AIが下書き</h3>
+          <p class="mt-4 text-body text-ink-700">過去のやり取りを学習したAIが、文体まで再現して下書きを生成。確認して送るだけ。</p>
           <div class="mt-6 flex items-center gap-4">
             <span class="text-ink-500 line-through text-lg">1通5分</span>
-            <span class="text-gold-500 text-xl">→</span>
-            <span class="text-gold-500 font-serif font-bold text-3xl">30秒</span>
+            <span class="text-gold-700 text-xl">→</span>
+            <span class="text-gold-700 font-serif font-bold text-3xl">30秒</span>
           </div>
         </div>
       </article>
 
-      <!-- Card 3: 資料 -->
       <article class="usecase-card-large fade-in">
         <div class="usecase-canvas-large flex items-center justify-center text-ink-500 text-small">
           <span>3Dシーン準備中 (slides)</span>
         </div>
         <div class="p-8 md:p-10">
           <span class="label-eyebrow">Use Case 03</span>
-          <h3 class="mt-4 font-serif font-bold text-2xl text-white tracking-tightest">営業資料、3分で完成</h3>
-          <p class="mt-4 text-body text-ink-300">テーマと構成を伝えるだけで、AIがスライドを自動生成。デザインの調整もAIが行います。</p>
+          <h3 class="mt-4 font-serif font-bold text-2xl text-ink-900 tracking-tightest">営業資料、3分で完成</h3>
+          <p class="mt-4 text-body text-ink-700">テーマと構成を伝えるだけで、AIがスライドを自動生成。デザインの調整もAIが行います。</p>
           <div class="mt-6 flex items-center gap-4">
             <span class="text-ink-500 line-through text-lg">30分</span>
-            <span class="text-gold-500 text-xl">→</span>
-            <span class="text-gold-500 font-serif font-bold text-3xl">3分</span>
+            <span class="text-gold-700 text-xl">→</span>
+            <span class="text-gold-700 font-serif font-bold text-3xl">3分</span>
           </div>
         </div>
       </article>
 
-      <!-- Card 4: 採用 -->
       <article class="usecase-card-large fade-in delay-1">
         <div class="usecase-canvas-large flex items-center justify-center text-ink-500 text-small">
           <span>3Dシーン準備中 (hiring)</span>
         </div>
         <div class="p-8 md:p-10">
           <span class="label-eyebrow">Use Case 04</span>
-          <h3 class="mt-4 font-serif font-bold text-2xl text-white tracking-tightest">採用書類、自動スクリーニング</h3>
-          <p class="mt-4 text-body text-ink-300">応募者の経歴と要件をAIが照合し、優先度を自動評価。一次選考の工数を激減させます。</p>
+          <h3 class="mt-4 font-serif font-bold text-2xl text-ink-900 tracking-tightest">採用書類、自動スクリーニング</h3>
+          <p class="mt-4 text-body text-ink-700">応募者の経歴と要件をAIが照合し、優先度を自動評価。一次選考の工数を激減させます。</p>
           <div class="mt-6 flex items-center gap-4">
             <span class="text-ink-500 line-through text-lg">1人30分</span>
-            <span class="text-gold-500 text-xl">→</span>
-            <span class="text-gold-500 font-serif font-bold text-3xl">2分</span>
+            <span class="text-gold-700 text-xl">→</span>
+            <span class="text-gold-700 font-serif font-bold text-3xl">2分</span>
           </div>
         </div>
       </article>
 
-      <!-- Card 5: 契約書 -->
       <article class="usecase-card-large fade-in">
         <div class="usecase-canvas-large flex items-center justify-center text-ink-500 text-small">
           <span>3Dシーン準備中 (contract)</span>
         </div>
         <div class="p-8 md:p-10">
           <span class="label-eyebrow">Use Case 05</span>
-          <h3 class="mt-4 font-serif font-bold text-2xl text-white tracking-tightest">契約書チェック、瞬時に</h3>
-          <p class="mt-4 text-body text-ink-300">リスク条項・抜け漏れを自動検出。法務負担を減らし、判断の質は落としません。</p>
+          <h3 class="mt-4 font-serif font-bold text-2xl text-ink-900 tracking-tightest">契約書チェック、瞬時に</h3>
+          <p class="mt-4 text-body text-ink-700">リスク条項・抜け漏れを自動検出。法務負担を減らし、判断の質は落としません。</p>
           <div class="mt-6 flex items-center gap-4">
             <span class="text-ink-500 line-through text-lg">30分</span>
-            <span class="text-gold-500 text-xl">→</span>
-            <span class="text-gold-500 font-serif font-bold text-3xl">5分</span>
+            <span class="text-gold-700 text-xl">→</span>
+            <span class="text-gold-700 font-serif font-bold text-3xl">5分</span>
           </div>
         </div>
       </article>
 
-      <!-- Card 6: SNS -->
       <article class="usecase-card-large fade-in delay-1">
         <div class="usecase-canvas-large flex items-center justify-center text-ink-500 text-small">
           <span>3Dシーン準備中 (sns)</span>
         </div>
         <div class="p-8 md:p-10">
           <span class="label-eyebrow">Use Case 06</span>
-          <h3 class="mt-4 font-serif font-bold text-2xl text-white tracking-tightest">SNS原稿、自動生成</h3>
-          <p class="mt-4 text-body text-ink-300">トーンと方針を一度伝えれば、毎日の投稿原稿をAIが量産。広報担当の月10時間を解放。</p>
+          <h3 class="mt-4 font-serif font-bold text-2xl text-ink-900 tracking-tightest">SNS原稿、自動生成</h3>
+          <p class="mt-4 text-body text-ink-700">トーンと方針を一度伝えれば、毎日の投稿原稿をAIが量産。広報担当の月10時間を解放。</p>
           <div class="mt-6 flex items-center gap-4">
             <span class="text-ink-500 line-through text-lg">1時間</span>
-            <span class="text-gold-500 text-xl">→</span>
-            <span class="text-gold-500 font-serif font-bold text-3xl">5分</span>
+            <span class="text-gold-700 text-xl">→</span>
+            <span class="text-gold-700 font-serif font-bold text-3xl">5分</span>
           </div>
         </div>
       </article>
 
     </div>
 
-    <!-- ★ Featured: System Internalization -->
+    <!-- ★ Featured -->
     <div class="mt-16 fade-in">
-      <article class="relative bg-navy-800 border border-gold-500 p-10 md:p-14">
-        <span class="absolute -top-3 left-10 bg-navy-900 px-3 text-label text-gold-500 uppercase">★ Featured</span>
+      <article class="relative bg-white border-2 border-gold-500 p-10 md:p-14">
+        <span class="absolute -top-3 left-10 bg-cream-50 px-3 text-label text-gold-700 uppercase">★ Featured</span>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
             <span class="label-eyebrow">Use Case 07</span>
-            <h3 class="mt-4 font-serif font-bold text-white tracking-tightest"
+            <h3 class="mt-4 font-serif font-bold text-ink-900 tracking-tightest"
                 style="font-size: clamp(28px, 3.5vw, 44px); line-height: 1.3;">
               業務システム、もう<br>
-              <span class="text-gold-500">外注しません。</span>
+              <span class="text-gold-700">外注しません。</span>
             </h3>
-            <p class="mt-6 text-body text-ink-300">
+            <p class="mt-6 text-body text-ink-700">
               受発注管理、在庫管理、申請承認、社内ツール。
-              これまで <span class="text-white font-bold">数百万円・数ヶ月待ち</span> だった業務システムを、
-              社員が <span class="text-gold-500 font-bold">1日で構築</span> できる時代です。
+              これまで <span class="text-ink-900 font-bold">数百万円・数ヶ月待ち</span> だった業務システムを、
+              社員が <span class="text-gold-700 font-bold">1日で構築</span> できる時代です。
             </p>
-            <p class="mt-4 text-body text-ink-300">
+            <p class="mt-4 text-body text-ink-700">
               EFILは "業務にフィットしたシステムを社内で持てる状態" まで伴走します。
               開発会社を兼ね備えた、私たちならではの提供価値です。
             </p>
             <div class="mt-8 flex items-center gap-6 flex-wrap">
               <div>
                 <p class="text-label uppercase text-ink-500 tracking-label">外注</p>
-                <p class="font-serif font-bold text-2xl text-ink-300 line-through mt-1">¥3,000,000〜</p>
+                <p class="font-serif font-bold text-2xl text-ink-500 line-through mt-1">¥3,000,000〜</p>
               </div>
-              <span class="text-gold-500 text-2xl">→</span>
+              <span class="text-gold-700 text-2xl">→</span>
               <div>
-                <p class="text-label uppercase text-gold-500 tracking-label">内製</p>
-                <p class="font-serif font-bold text-3xl text-gold-500 mt-1">¥0</p>
+                <p class="text-label uppercase text-gold-700 tracking-label">内製</p>
+                <p class="font-serif font-bold text-3xl text-gold-700 mt-1">¥0</p>
               </div>
             </div>
           </div>
-          <div class="aspect-video bg-navy-950 border border-line-700 flex items-center justify-center text-ink-500">
+          <div class="aspect-video bg-cream-100 border border-line-200 flex items-center justify-center text-ink-500">
             <span class="text-small">3Dシーン準備中 (system building)</span>
           </div>
         </div>
@@ -250,23 +239,23 @@
   </div>
 </section>
 
-<!-- Placeholder: more sections to come -->
-<section id="contact" class="section section-sub">
+<!-- Placeholder section -->
+<section id="contact" class="section section-paper border-t border-line-200">
   <div class="container-wide">
     <div class="max-w-narrow fade-in">
       <span class="label-eyebrow">Coming Soon</span>
       <span class="rule-gold mt-6 mb-10"></span>
-      <h2 class="heading-serif text-white">残りのセクションは順次追加します。</h2>
-      <p class="mt-8 text-body text-ink-300">
+      <h2 class="heading-serif text-ink-900">残りのセクションは順次追加します。</h2>
+      <p class="mt-8 text-body text-ink-700">
         「あるある」「数字インパクト」「成功事例」「EFILアプローチ」「なぜ今か」「ROI診断」「FAQ」「最終フォーム」を順次実装していきます。
       </p>
     </div>
   </div>
 </section>
 
-<footer class="bg-navy-950 border-t border-line-700">
+<footer class="bg-cream-100 border-t border-line-200">
   <div class="container-wide py-12">
-    <span class="font-serif font-bold text-xl text-white">EFIL</span>
+    <span class="font-serif font-bold text-xl text-ink-900">EFIL</span>
     <p class="mt-2 text-small text-ink-500">© EFIL Inc. — Redesign v2 (in progress)</p>
   </div>
 </footer>
