@@ -49,19 +49,22 @@ if (laptopSection && laptopCanvas) {
   // a tap-to-cycle compact layout instead.
   const lgQuery = window.matchMedia('(min-width: 1024px)');
 
-  // ── Hero: pinned for ~2 viewport heights, scroll drives Genesis animation ──
+  // ── Hero: pinned, scroll drives Genesis animation ──
   if (heroScene && heroSection && !prefersReducedMotion && lgQuery.matches) {
     ScrollTrigger.create({
       trigger: heroSection,
       start: 'top top',
-      end: '+=200%',
+      end: () => '+=' + (window.innerHeight * 2),
       pin: true,
       pinSpacing: true,
-      scrub: 1,
+      scrub: 0.6,
       anticipatePin: 1,
       invalidateOnRefresh: true,
       onUpdate: (self) => {
         heroScene.setProgress(self.progress);
+      },
+      onRefresh: (self) => {
+        heroScene.setProgress(self.progress || 0);
       },
     });
   } else if (heroScene) {
@@ -125,5 +128,10 @@ const heroCanvas = document.querySelector('canvas[data-scene="hero"]');
 const heroSection = document.querySelector('#top');
 let heroScene = null;
 if (heroCanvas) heroScene = createHeroScene(heroCanvas);
+
+// Make sure ScrollTrigger picks up final layout + initial scroll position
+window.addEventListener('load', () => {
+  ScrollTrigger.refresh();
+});
 
 console.log('[EFIL LP v2] initialized');
