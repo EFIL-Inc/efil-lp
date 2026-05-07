@@ -465,7 +465,7 @@ export function createHeroScene(canvas) {
     mailStack:   { x: -3.0, z: -1.0, baseY: 0.02 },    // mid-left
     calStand:    { x:  3.6, z: -1.5, baseY: 0.5 },     // back-right (next to laptop)
     stickyGrid:  { x: -0.2, z:  2.0 },                 // front-center grid
-    penCup:      { x:  3.0, z:  0.6, baseY: 0.55 },    // mid-right
+    penCup:      { x:  3.2, z:  1.0, baseY: 0.55 },    // matches cupGroup.position
   };
 
   // Group items by type and assign target positions
