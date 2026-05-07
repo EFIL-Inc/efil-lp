@@ -49,6 +49,26 @@ if (laptopSection && laptopCanvas) {
   // a tap-to-cycle compact layout instead.
   const lgQuery = window.matchMedia('(min-width: 1024px)');
 
+  // ── Hero: pinned for ~2 viewport heights, scroll drives Genesis animation ──
+  if (heroScene && heroSection && !prefersReducedMotion && lgQuery.matches) {
+    ScrollTrigger.create({
+      trigger: heroSection,
+      start: 'top top',
+      end: '+=200%',
+      pin: true,
+      pinSpacing: true,
+      scrub: 1,
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+      onUpdate: (self) => {
+        heroScene.setProgress(self.progress);
+      },
+    });
+  } else if (heroScene) {
+    // Reduced-motion / mobile: show final network state immediately
+    heroScene.setProgress(1);
+  }
+
   function setActive(idx) {
     laptop.setProgress(idx / N);
     textPanels.forEach((panel, i) => {
@@ -100,8 +120,10 @@ if (laptopSection && laptopCanvas) {
   }
 }
 
-// Hero: always-on background scene
+// Hero: scroll-driven Genesis scene
 const heroCanvas = document.querySelector('canvas[data-scene="hero"]');
-if (heroCanvas) createHeroScene(heroCanvas);
+const heroSection = document.querySelector('#top');
+let heroScene = null;
+if (heroCanvas) heroScene = createHeroScene(heroCanvas);
 
 console.log('[EFIL LP v2] initialized');

@@ -1,23 +1,22 @@
 import * as THREE from 'three';
 
 /**
- * Hero scene v3 — Bright office workflow simplified by AI.
+ * Hero scene "Genesis" — scroll-driven 4-act 3D narrative.
  *
- * Tuned for a CREAM (#FAF7F2) page background:
- * - Fog tinted to cream so meshes blend into bg at distance
- * - Floor wireframe is warm gray (visible on cream)
- * - Atmospheric particles use deep gold + warm gray for visibility on light bg
- * - Task glyph textures have stronger borders for contrast on cream
- * - AI core retains its luminous gold appearance
+ * Driven entirely by scroll progress (0..1) via setProgress():
+ *   Phase 1 (0.00 - 0.33)  Chaos      : ~4,000 particles drift in deep space
+ *   Phase 2 (0.33 - 0.66)  Convergence: particles accelerate toward center
+ *   Phase 3 (0.66 - 0.85)  Birth      : AI core materializes, brilliant flash
+ *   Phase 4 (0.85 - 1.00)  Network    : 6 light beams shoot out, satellite
+ *                                       nodes form, connections appear
  */
 export function createHeroScene(canvas) {
   const BG_COLOR = 0xFAF7F2; // cream-50
-  const FLOOR_COLOR = 0xC8BEA5; // warmer line on cream
-  const PARTICLE_DIM = new THREE.Color(0x9AA3B5);
-  const PARTICLE_GOLD = new THREE.Color(0xB8860B);
+  const ACCENT = 0xC9A84C;
+  const ACCENT_DEEP = 0xB8860B;
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(BG_COLOR, 0.05);
+  scene.fog = new THREE.FogExp2(BG_COLOR, 0.04);
 
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -29,232 +28,174 @@ export function createHeroScene(canvas) {
   renderer.setClearColor(0x000000, 0);
 
   const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 200);
-  camera.position.set(0, 1.6, 14);
+  camera.position.set(0, 0, 16);
   camera.lookAt(0, 0, 0);
 
-  // ── Lighting (warm office) ──
-  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-  const topLight = new THREE.DirectionalLight(0xfff4dc, 0.6);
-  topLight.position.set(0, 12, 6);
-  scene.add(topLight);
-  const goldRim = new THREE.PointLight(0xC9A84C, 1.2, 18);
-  goldRim.position.set(0, 0, 0);
-  scene.add(goldRim);
+  // ── Lighting ──
+  scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+  const goldLight = new THREE.PointLight(ACCENT, 2.0, 30);
+  goldLight.position.set(0, 0, 0);
+  scene.add(goldLight);
 
-  // ── Floor wireframe (warm gray on cream) ──
-  const floorGeo = new THREE.PlaneGeometry(50, 50, 24, 24);
-  const floorMat = new THREE.MeshBasicMaterial({
-    color: FLOOR_COLOR,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.35,
-  });
-  const floor = new THREE.Mesh(floorGeo, floorMat);
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -2.6;
-  scene.add(floor);
+  // ── Particles (4,000) ──
+  const PARTICLE_COUNT = 4000;
+  const positions = new Float32Array(PARTICLE_COUNT * 3);
+  const colors = new Float32Array(PARTICLE_COUNT * 3);
+  const sizes = new Float32Array(PARTICLE_COUNT);
 
-  // ── Atmospheric particles ──
-  const ATM_COUNT = 600;
-  const atmPositions = new Float32Array(ATM_COUNT * 3);
-  const atmColors = new Float32Array(ATM_COUNT * 3);
-  for (let i = 0; i < ATM_COUNT; i++) {
-    const r = Math.pow(Math.random(), 0.5) * 16 + 2;
-    const a = Math.random() * Math.PI * 2;
-    atmPositions[i * 3]     = Math.cos(a) * r;
-    atmPositions[i * 3 + 1] = (Math.random() - 0.4) * 7;
-    atmPositions[i * 3 + 2] = Math.sin(a) * r - Math.random() * 6;
-    const c = Math.random() < 0.18 ? PARTICLE_GOLD : PARTICLE_DIM;
-    atmColors[i * 3] = c.r; atmColors[i * 3 + 1] = c.g; atmColors[i * 3 + 2] = c.b;
+  // Per-particle data: chaos position + orbit parameters
+  const particleData = new Array(PARTICLE_COUNT);
+
+  const goldC = new THREE.Color(0xC9A84C);
+  const dimC = new THREE.Color(0x8a8980);
+  const lightC = new THREE.Color(0xC8C2B5);
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    // Chaos position: scattered in a wide ellipsoid
+    const r = 6 + Math.pow(Math.random(), 0.5) * 14;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const cx = r * Math.sin(phi) * Math.cos(theta);
+    const cy = r * Math.cos(phi) * 0.55; // flatter on Y
+    const cz = r * Math.sin(phi) * Math.sin(theta);
+
+    // Orbit position (when network forms)
+    const orbitR = 0.4 + Math.random() * 2.2;
+    const orbitA = Math.random() * Math.PI * 2;
+    const orbitY = (Math.random() - 0.5) * 1.0;
+    const orbitSpeed = 0.3 + Math.random() * 0.4;
+
+    particleData[i] = {
+      cx, cy, cz,
+      orbitR, orbitA, orbitY, orbitSpeed,
+      seed: Math.random() * Math.PI * 2,
+      tilt: (Math.random() - 0.5) * 0.4,
+    };
+
+    // Colors: mix gold, dim, light
+    let c;
+    const r1 = Math.random();
+    if (r1 < 0.25) c = goldC;
+    else if (r1 < 0.55) c = lightC;
+    else c = dimC;
+    colors[i * 3]     = c.r;
+    colors[i * 3 + 1] = c.g;
+    colors[i * 3 + 2] = c.b;
+
+    // Size variance
+    sizes[i] = 0.05 + Math.random() * 0.06;
+
+    // Initial position = chaos
+    positions[i * 3]     = cx;
+    positions[i * 3 + 1] = cy;
+    positions[i * 3 + 2] = cz;
   }
-  const atmGeo = new THREE.BufferGeometry();
-  atmGeo.setAttribute('position', new THREE.BufferAttribute(atmPositions, 3));
-  atmGeo.setAttribute('color', new THREE.BufferAttribute(atmColors, 3));
-  const atmMat = new THREE.PointsMaterial({
-    size: 0.07,
+
+  const particleGeo = new THREE.BufferGeometry();
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+  const particleMat = new THREE.PointsMaterial({
+    size: 0.09,
     vertexColors: true,
     transparent: true,
-    opacity: 0.55,
+    opacity: 0.85,
     sizeAttenuation: true,
+    blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
-  const atmPoints = new THREE.Points(atmGeo, atmMat);
-  scene.add(atmPoints);
+  const particles = new THREE.Points(particleGeo, particleMat);
+  scene.add(particles);
 
-  // ── AI core ──
+  // ── AI Core (appears at center during birth phase) ──
   const coreGroup = new THREE.Group();
   scene.add(coreGroup);
 
   const core = new THREE.Mesh(
     new THREE.SphereGeometry(0.55, 48, 48),
-    new THREE.MeshBasicMaterial({ color: 0xC9A84C }),
+    new THREE.MeshBasicMaterial({ color: ACCENT }),
   );
+  core.scale.setScalar(0);
   coreGroup.add(core);
 
-  const ring1Mat = new THREE.MeshBasicMaterial({
-    color: 0xB8860B, transparent: true, opacity: 0.55, side: THREE.DoubleSide,
+  const haloMat1 = new THREE.MeshBasicMaterial({
+    color: ACCENT, transparent: true, opacity: 0, side: THREE.DoubleSide,
   });
-  const ring1 = new THREE.Mesh(new THREE.RingGeometry(0.85, 0.95, 64), ring1Mat);
-  coreGroup.add(ring1);
+  const halo1 = new THREE.Mesh(new THREE.RingGeometry(0.85, 0.95, 64), haloMat1);
+  coreGroup.add(halo1);
 
-  const ring2Mat = new THREE.MeshBasicMaterial({
-    color: 0xB8860B, transparent: true, opacity: 0.3, side: THREE.DoubleSide,
+  const haloMat2 = new THREE.MeshBasicMaterial({
+    color: ACCENT_DEEP, transparent: true, opacity: 0, side: THREE.DoubleSide,
   });
-  const ring2 = new THREE.Mesh(new THREE.RingGeometry(1.4, 1.5, 64), ring2Mat);
-  coreGroup.add(ring2);
+  const halo2 = new THREE.Mesh(new THREE.RingGeometry(1.4, 1.5, 64), haloMat2);
+  coreGroup.add(halo2);
 
-  // ── Office task glyphs (light bg variant: stronger borders) ──
-  function makeTaskTexture(type) {
-    const c = document.createElement('canvas');
-    c.width = 128; c.height = 128;
-    const ctx = c.getContext('2d');
-    ctx.clearRect(0, 0, 128, 128);
+  // Burst flash sphere (for the birth flash moment)
+  const burst = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 32, 32),
+    new THREE.MeshBasicMaterial({
+      color: 0xFFF6D9, transparent: true, opacity: 0,
+    }),
+  );
+  burst.scale.setScalar(0);
+  coreGroup.add(burst);
 
-    // Soft drop-shadow effect via dark border
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(8, 8, 112, 112);
-    ctx.strokeStyle = '#7A6225';
-    ctx.lineWidth = 2.5;
-    ctx.strokeRect(8, 8, 112, 112);
+  // ── Network elements (6 satellites + beams + connections) ──
+  const SATELLITE_COUNT = 6;
+  const NETWORK_RADIUS = 4.5;
+  const networkGroup = new THREE.Group();
+  scene.add(networkGroup);
 
-    if (type === 'doc') {
-      ctx.fillStyle = '#3A3A52';
-      for (let i = 0; i < 6; i++) {
-        ctx.fillRect(20, 26 + i * 14, 88 - (i % 3) * 14, 4);
-      }
-    } else if (type === 'mail') {
-      ctx.strokeStyle = '#3A3A52';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(8, 28); ctx.lineTo(64, 78); ctx.lineTo(120, 28);
-      ctx.stroke();
-    } else if (type === 'calendar') {
-      ctx.fillStyle = '#1F2937';
-      ctx.fillRect(8, 8, 112, 22);
-      ctx.fillStyle = '#3A3A52';
-      for (let r = 0; r < 4; r++) {
-        for (let cIdx = 0; cIdx < 6; cIdx++) {
-          ctx.fillRect(18 + cIdx * 16, 42 + r * 18, 12, 12);
-        }
-      }
-    } else if (type === 'check') {
-      ctx.strokeStyle = '#3A3A52';
-      ctx.lineWidth = 2.5;
-      for (let i = 0; i < 4; i++) {
-        ctx.strokeRect(20, 28 + i * 18, 12, 12);
-        ctx.beginPath();
-        ctx.moveTo(40, 36 + i * 18); ctx.lineTo(108, 36 + i * 18);
-        ctx.stroke();
-      }
-    } else if (type === 'spread') {
-      ctx.strokeStyle = '#3A3A52';
-      ctx.lineWidth = 1.5;
-      for (let r = 0; r <= 6; r++) {
-        ctx.beginPath();
-        ctx.moveTo(8, 14 + r * 17); ctx.lineTo(120, 14 + r * 17);
-        ctx.stroke();
-      }
-      for (let cIdx = 0; cIdx <= 4; cIdx++) {
-        ctx.beginPath();
-        ctx.moveTo(8 + cIdx * 28, 14); ctx.lineTo(8 + cIdx * 28, 116);
-        ctx.stroke();
-      }
-    }
-    const tex = new THREE.CanvasTexture(c);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }
+  const beams = [];
+  const satellites = [];
+  const satelliteGlows = [];
 
-  const TASK_TYPES = ['doc', 'mail', 'calendar', 'check', 'spread'];
-  const taskTextures = TASK_TYPES.map(makeTaskTexture);
+  for (let i = 0; i < SATELLITE_COUNT; i++) {
+    const angle = (i / SATELLITE_COUNT) * Math.PI * 2;
+    const dir = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
+    const targetPos = dir.clone().multiplyScalar(NETWORK_RADIUS);
+    targetPos.y = (i % 2 === 0 ? 1 : -1) * 0.6; // slight up/down alternation
 
-  const TASK_COUNT = 40;
-  const tasks = [];
-
-  function spawnTask(task) {
-    const a = Math.random() * Math.PI * 2;
-    const r = 8 + Math.random() * 6;
-    const y = (Math.random() - 0.3) * 5;
-    task.mesh.position.set(Math.cos(a) * r, y, Math.sin(a) * r * 0.5 - 2);
-    task.target.set(0, Math.random() * 0.5 - 0.25, 0);
-    task.startPos.copy(task.mesh.position);
-    task.progress = 0;
-    task.duration = 6 + Math.random() * 6;
-    task.spinAxis.set(
-      Math.random() - 0.5,
-      Math.random() - 0.5,
-      Math.random() - 0.5,
-    ).normalize();
-    task.spinSpeed = 0.3 + Math.random() * 0.5;
-    task.mesh.scale.setScalar(1);
-    task.mesh.material.opacity = 0;
-    const ti = Math.floor(Math.random() * taskTextures.length);
-    task.mesh.material.map = taskTextures[ti];
-    const sx = (ti === 1) ? 1.0 : (ti === 2 ? 0.85 : 0.75);
-    const sy = (ti === 1) ? 0.6 : (ti === 2 ? 0.85 : 1.0);
-    task.mesh.geometry.dispose();
-    task.mesh.geometry = new THREE.PlaneGeometry(sx, sy);
-  }
-
-  for (let i = 0; i < TASK_COUNT; i++) {
-    const mat = new THREE.MeshStandardMaterial({
-      map: taskTextures[i % taskTextures.length],
-      roughness: 0.7,
-      metalness: 0.0,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0,
+    // Beam: thin gold cylinder from core to satellite
+    const beamLen = targetPos.length();
+    const beamGeo = new THREE.CylinderGeometry(0.012, 0.025, beamLen, 8, 1);
+    const beamMat = new THREE.MeshBasicMaterial({
+      color: ACCENT, transparent: true, opacity: 0,
     });
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 1), mat);
-    const task = {
-      mesh,
-      target: new THREE.Vector3(),
-      startPos: new THREE.Vector3(),
-      spinAxis: new THREE.Vector3(),
-      spinSpeed: 0.5,
-      progress: 0,
-      duration: 6,
-    };
-    spawnTask(task);
-    task.progress = Math.random();
-    scene.add(mesh);
-    tasks.push(task);
+    const beam = new THREE.Mesh(beamGeo, beamMat);
+    // Cylinder default is along Y, rotate to point at satellite
+    beam.position.copy(targetPos.clone().multiplyScalar(0.5));
+    beam.lookAt(targetPos);
+    beam.rotateX(Math.PI / 2);
+    beam.scale.set(0, 0, 0); // hidden initially
+    beam.userData = { dir: dir.clone(), targetPos: targetPos.clone(), beamLen };
+    networkGroup.add(beam);
+    beams.push(beam);
+
+    // Satellite (small sphere)
+    const sat = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 24, 24),
+      new THREE.MeshBasicMaterial({ color: ACCENT_DEEP, transparent: true, opacity: 0 }),
+    );
+    sat.position.copy(targetPos);
+    sat.scale.setScalar(0);
+    networkGroup.add(sat);
+    satellites.push(sat);
+
+    // Satellite glow ring
+    const glow = new THREE.Mesh(
+      new THREE.RingGeometry(0.28, 0.36, 32),
+      new THREE.MeshBasicMaterial({
+        color: ACCENT, transparent: true, opacity: 0, side: THREE.DoubleSide,
+      }),
+    );
+    glow.position.copy(targetPos);
+    glow.lookAt(camera.position);
+    networkGroup.add(glow);
+    satelliteGlows.push(glow);
   }
 
-  // ── Completion sparks ──
-  const SPARK_COUNT = 80;
-  const sparkPos = new Float32Array(SPARK_COUNT * 3);
-  const sparkLife = new Float32Array(SPARK_COUNT);
-  for (let i = 0; i < SPARK_COUNT; i++) {
-    sparkPos[i * 3] = 0; sparkPos[i * 3 + 1] = 0; sparkPos[i * 3 + 2] = 0;
-    sparkLife[i] = -1;
-  }
-  const sparkGeo = new THREE.BufferGeometry();
-  sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
-  const sparkMat = new THREE.PointsMaterial({
-    color: 0xB8860B,
-    size: 0.2,
-    transparent: true,
-    opacity: 0.95,
-    sizeAttenuation: true,
-    depthWrite: false,
-  });
-  const sparks = new THREE.Points(sparkGeo, sparkMat);
-  scene.add(sparks);
-
-  function emitSpark(pos) {
-    for (let i = 0; i < SPARK_COUNT; i++) {
-      if (sparkLife[i] < 0) {
-        sparkLife[i] = 1.0;
-        sparkPos[i * 3]     = pos.x + (Math.random() - 0.5) * 0.4;
-        sparkPos[i * 3 + 1] = pos.y;
-        sparkPos[i * 3 + 2] = pos.z + (Math.random() - 0.5) * 0.4;
-        return;
-      }
-    }
-  }
-
-  // ── Mouse parallax ──
+  // ── Mouse parallax (subtle) ──
   const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
   const onMouseMove = (e) => {
     mouse.tx = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -262,61 +203,133 @@ export function createHeroScene(canvas) {
   };
   window.addEventListener('mousemove', onMouseMove, { passive: true });
 
+  // ── State ──
+  let progress = 0;
+
+  function setProgress(p) {
+    progress = Math.max(0, Math.min(1, p));
+  }
+
+  // ── Animation loop ──
   const clock = new THREE.Clock();
   let frameId;
-  function easeInQuad(t) { return t * t; }
 
-  function animate() {
-    const dt = Math.min(clock.getDelta(), 0.05);
-    const t = clock.getElapsedTime();
+  function smoothstep(a, b, x) {
+    const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+    return t * t * (3 - 2 * t);
+  }
+  function easeInQuad(x) { return x * x; }
+  function easeOutCubic(x) { return 1 - Math.pow(1 - x, 3); }
 
-    floor.material.opacity = 0.32 + Math.sin(t * 0.4) * 0.05;
-    atmPoints.rotation.y = t * 0.025;
+  function updateScene(p, t) {
+    // ── Particles ──
+    const posAttr = particleGeo.attributes.position;
+    const arr = posAttr.array;
 
-    const pulse = 1 + Math.sin(t * 1.6) * 0.08;
-    core.scale.setScalar(pulse);
-    ring1.rotation.z = t * 0.4;
-    ring2.rotation.z = -t * 0.25;
-    ring1Mat.opacity = 0.45 + Math.sin(t * 1.6) * 0.15;
-    ring2Mat.opacity = 0.25 + Math.sin(t * 1.6 + 1) * 0.1;
-    goldRim.intensity = 1.1 + Math.sin(t * 1.6) * 0.4;
+    // Phase factors
+    const f_chaos      = 1 - smoothstep(0.20, 0.45, p);
+    const f_converging = smoothstep(0.20, 0.66, p);
+    const f_birth      = smoothstep(0.60, 0.78, p);
+    const f_network    = smoothstep(0.80, 0.95, p);
 
-    tasks.forEach((task) => {
-      task.progress += dt / task.duration;
-      const p = task.progress;
-      if (p >= 1) {
-        emitSpark(task.target);
-        spawnTask(task);
-        return;
-      }
-      const e = easeInQuad(p);
-      task.mesh.position.lerpVectors(task.startPos, task.target, e);
-      const opacity = p < 0.15 ? p / 0.15 : Math.max(0, 1 - (p - 0.7) / 0.3);
-      task.mesh.material.opacity = opacity * 0.95;
-      const scale = p < 0.7 ? 1 : Math.max(0.05, 1 - (p - 0.7) / 0.3);
-      task.mesh.scale.setScalar(scale);
-      task.mesh.rotateOnAxis(task.spinAxis, dt * task.spinSpeed);
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const d = particleData[i];
+      const drift = 0.25 * f_chaos;
+
+      // Chaos position with subtle drift
+      const chaosPos = {
+        x: d.cx + Math.sin(t * 0.15 + d.seed) * drift,
+        y: d.cy + Math.cos(t * 0.18 + d.seed * 1.3) * drift,
+        z: d.cz + Math.sin(t * 0.12 + d.seed * 0.7) * drift,
+      };
+
+      // Orbit position (network state)
+      const orbitT = t * d.orbitSpeed * 0.5;
+      const orbitPos = {
+        x: Math.cos(d.orbitA + orbitT) * d.orbitR,
+        y: d.orbitY + Math.sin(orbitT * 0.7) * 0.15,
+        z: Math.sin(d.orbitA + orbitT) * d.orbitR,
+      };
+
+      // Center cloud (during birth) — particles compressed near origin
+      const compressFactor = 1 - f_converging;
+      const px = chaosPos.x * compressFactor + orbitPos.x * f_network;
+      const py = chaosPos.y * compressFactor + orbitPos.y * f_network;
+      const pz = chaosPos.z * compressFactor + orbitPos.z * f_network;
+
+      arr[i * 3]     = px;
+      arr[i * 3 + 1] = py;
+      arr[i * 3 + 2] = pz;
+    }
+    posAttr.needsUpdate = true;
+
+    // Particle opacity ramp during convergence (denser look)
+    particleMat.opacity = 0.65 + f_converging * 0.25;
+    particleMat.size = 0.09 + f_birth * 0.04;
+
+    // ── AI Core ──
+    const coreScale = easeOutCubic(f_birth);
+    core.scale.setScalar(coreScale);
+    // Pulse during network phase
+    if (f_network > 0) {
+      const pulse = 1 + Math.sin(t * 2.2) * 0.08;
+      core.scale.setScalar(coreScale * pulse);
+    }
+    haloMat1.opacity = 0.55 * f_birth;
+    halo1.scale.setScalar(1 + f_network * 0.5 + Math.sin(t * 1.2) * 0.05);
+    haloMat2.opacity = 0.3 * f_birth;
+    halo2.scale.setScalar(1 + f_network * 0.6 + Math.cos(t * 0.9) * 0.05);
+    halo1.rotation.z = t * 0.4;
+    halo2.rotation.z = -t * 0.3;
+    goldLight.intensity = 0.5 + f_birth * 2.5;
+
+    // Burst flash at birth moment (peaks around p=0.72, fades quickly)
+    const burstPhase = smoothstep(0.66, 0.75, p) * (1 - smoothstep(0.75, 0.88, p));
+    burst.material.opacity = burstPhase * 0.9;
+    burst.scale.setScalar(burstPhase * 6);
+
+    // ── Beams ──
+    beams.forEach((beam, i) => {
+      const beamT = smoothstep(0.85 + i * 0.005, 0.95 + i * 0.005, p);
+      beam.scale.set(beamT, beamT, beamT);
+      beam.material.opacity = beamT * 0.6;
     });
 
-    let sparkAttr = sparks.geometry.attributes.position;
-    for (let i = 0; i < SPARK_COUNT; i++) {
-      if (sparkLife[i] < 0) continue;
-      sparkLife[i] -= dt * 0.45;
-      if (sparkLife[i] < 0) {
-        sparkPos[i * 3 + 1] = -100;
-        continue;
+    // ── Satellites ──
+    satellites.forEach((sat, i) => {
+      const satT = smoothstep(0.92 + i * 0.005, 1.0 + i * 0.005, p);
+      sat.scale.setScalar(easeOutCubic(satT));
+      sat.material.opacity = satT;
+      // pulse
+      if (satT > 0.5) {
+        const pulse = 1 + Math.sin(t * 2 + i) * 0.1;
+        sat.scale.setScalar(easeOutCubic(satT) * pulse);
       }
-      sparkPos[i * 3 + 1] += dt * 1.2;
-      sparkPos[i * 3] += Math.sin(t * 2 + i) * dt * 0.05;
-    }
-    sparkAttr.needsUpdate = true;
+    });
 
+    satelliteGlows.forEach((glow, i) => {
+      const glowT = smoothstep(0.92 + i * 0.005, 1.0 + i * 0.005, p);
+      glow.material.opacity = glowT * (0.4 + Math.sin(t * 2 + i) * 0.2);
+      glow.lookAt(camera.position);
+    });
+
+    // ── Network rotation (slow ambient rotation when fully formed) ──
+    networkGroup.rotation.y = t * 0.05 * f_network;
+
+    // ── Camera ──
+    // Subtle zoom during birth, mouse parallax always
     mouse.x += (mouse.tx - mouse.x) * 0.04;
     mouse.y += (mouse.ty - mouse.y) * 0.04;
-    camera.position.x = mouse.x * 1.5;
-    camera.position.y = 1.6 - mouse.y * 0.8;
+    const baseZ = 16 - f_birth * 2 - f_network * 0.5;
+    camera.position.x = mouse.x * 1.2;
+    camera.position.y = -mouse.y * 0.8;
+    camera.position.z = baseZ;
     camera.lookAt(0, 0, 0);
+  }
 
+  function animate() {
+    const t = clock.getElapsedTime();
+    updateScene(progress, t);
     renderer.render(scene, camera);
     frameId = requestAnimationFrame(animate);
   }
@@ -336,6 +349,7 @@ export function createHeroScene(canvas) {
   animate();
 
   return {
+    setProgress,
     dispose() {
       cancelAnimationFrame(frameId);
       ro.disconnect();
