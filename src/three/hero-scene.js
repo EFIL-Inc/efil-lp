@@ -2,24 +2,27 @@ import * as THREE from 'three';
 
 /**
  * Hero scene: "Cluttered Desk → AI-Organized Workspace"
+ * Stylized illustration variant — flat matte aesthetic (Apple/Vercel/Linear-ish).
  *
- * Scroll-driven 3-act narrative on a 3D desk:
- *   Act 1 (0.00 - 0.30)  Chaos:    desk littered with 50+ recognizable
- *                                  papers / mail envelopes / calendar pages /
- *                                  sticky notes — the persona's reality.
- *   Act 2 (0.30 - 0.75)  AI Arrives: gold AI orb rises from desk center,
- *                                  pulls items in one by one, they vanish.
- *   Act 3 (0.75 - 1.00)  Order:    desk is clear; 3 floating "organized"
- *                                  output cards appear (clean dashboards) —
- *                                  the after state.
+ * - Items are thin BoxGeometry (visible edge thickness, NOT photo-realistic paper)
+ * - Higher-res canvas textures with bold simple illustrations
+ * - Refined 3-color palette: cream / gold / dark navy + 3 accent (sticky) tints
+ * - Matte materials, soft single light direction (no harsh PBR realism)
+ *
+ * Acts:
+ *   1 (0.00 - 0.30) Chaos     — desk littered with stylized items
+ *   2 (0.30 - 0.78) AI Arrives — gold orb rises, items absorbed (far → near)
+ *   3 (0.78 - 1.00) Order      — 3 floating dashboards appear
  */
 export function createHeroScene(canvas) {
-  const BG_COLOR = 0xFAF7F2;
-  const ACCENT = 0xC9A84C;
+  const BG_COLOR    = 0xFAF7F2;
+  const DESK_COLOR  = 0xE5DCC4;
+  const EDGE_COLOR  = 0xCFC4A6; // visible card-edge tint
+  const ACCENT      = 0xC9A84C;
   const ACCENT_DEEP = 0xB8860B;
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(BG_COLOR, 0.05);
+  scene.fog = new THREE.FogExp2(BG_COLOR, 0.04);
 
   const renderer = new THREE.WebGLRenderer({
     canvas, antialias: true, alpha: true,
@@ -28,236 +31,339 @@ export function createHeroScene(canvas) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x000000, 0);
 
-  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 80);
-  camera.position.set(2.4, 4.6, 8.5);
-  camera.lookAt(0, 0.6, 0);
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 80);
+  camera.position.set(2.8, 5.0, 9);
+  camera.lookAt(0, 0.5, 0);
 
-  // ── Lighting ──
-  scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-  const topLight = new THREE.DirectionalLight(0xfff4dc, 0.85);
-  topLight.position.set(3, 8, 5);
-  scene.add(topLight);
-  const fillLight = new THREE.DirectionalLight(0xC9A84C, 0.25);
-  fillLight.position.set(-4, 3, 4);
+  // ── Lighting (soft, illustration-style) ──
+  scene.add(new THREE.AmbientLight(0xFFF6E8, 0.85));
+  const keyLight = new THREE.DirectionalLight(0xFFF4DC, 0.65);
+  keyLight.position.set(4, 9, 5);
+  scene.add(keyLight);
+  const fillLight = new THREE.DirectionalLight(0xC9A84C, 0.18);
+  fillLight.position.set(-4, 4, 2);
   scene.add(fillLight);
 
-  // ── Desk surface ──
-  const deskGeo = new THREE.PlaneGeometry(16, 9);
+  // ── Desk ──
+  const deskGeo = new THREE.PlaneGeometry(18, 10);
   const deskMat = new THREE.MeshStandardMaterial({
-    color: 0xE5DCC4,
-    roughness: 0.92,
-    metalness: 0,
+    color: DESK_COLOR, roughness: 0.95, metalness: 0,
   });
   const desk = new THREE.Mesh(deskGeo, deskMat);
   desk.rotation.x = -Math.PI / 2;
-  desk.position.y = 0;
   scene.add(desk);
 
-  // Subtle desk grain (faint dark line strokes)
-  const grainGeo = new THREE.PlaneGeometry(16, 9, 24, 12);
-  const grainMat = new THREE.MeshBasicMaterial({
-    color: 0xC8BFA4,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.12,
-  });
-  const grain = new THREE.Mesh(grainGeo, grainMat);
-  grain.rotation.x = -Math.PI / 2;
-  grain.position.y = 0.001;
-  scene.add(grain);
+  // ── Stylized texture makers ──
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
 
-  // ── Item textures (recognizable office artifacts) ──
-  function makeDocTexture() {
-    const c = document.createElement('canvas'); c.width = 200; c.height = 280;
+  function makeDocTexture(variant = 0) {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 720;
     const x = c.getContext('2d');
-    x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, 200, 280);
-    x.strokeStyle = '#7A6225'; x.lineWidth = 4; x.strokeRect(2, 2, 196, 276);
-    x.fillStyle = '#3A3A52';
-    for (let i = 0; i < 12; i++) x.fillRect(20, 30 + i * 18, 160 - (i % 4) * 22, 5);
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  }
-  function makeMailTexture() {
-    const c = document.createElement('canvas'); c.width = 240; c.height = 160;
-    const x = c.getContext('2d');
-    x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, 240, 160);
-    x.strokeStyle = '#7A6225'; x.lineWidth = 4; x.strokeRect(2, 2, 236, 156);
-    x.strokeStyle = '#3A3A52'; x.lineWidth = 4;
-    x.beginPath(); x.moveTo(2, 8); x.lineTo(120, 90); x.lineTo(238, 8); x.stroke();
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  }
-  function makeCalendarTexture() {
-    const c = document.createElement('canvas'); c.width = 200; c.height = 220;
-    const x = c.getContext('2d');
-    x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, 200, 220);
-    x.strokeStyle = '#7A6225'; x.lineWidth = 4; x.strokeRect(2, 2, 196, 216);
-    x.fillStyle = '#1F2937'; x.fillRect(2, 2, 196, 36);
-    x.fillStyle = '#FFFFFF'; x.font = 'bold 18px sans-serif';
-    x.textAlign = 'center'; x.fillText('OCT', 100, 26);
-    x.fillStyle = '#3A3A52';
-    for (let r = 0; r < 4; r++) for (let cIdx = 0; cIdx < 6; cIdx++) {
-      x.fillRect(18 + cIdx * 28, 56 + r * 32, 22, 22);
+    // Card body
+    x.fillStyle = '#FFFFFF';
+    roundRect(x, 12, 12, 488, 696, 24); x.fill();
+    // Subtle edge
+    x.strokeStyle = '#EFE7CD'; x.lineWidth = 4;
+    roundRect(x, 12, 12, 488, 696, 24); x.stroke();
+    // Top accent bar
+    x.fillStyle = '#C9A84C';
+    roundRect(x, 12, 12, 488, 22, 12); x.fill();
+    // Title block
+    x.fillStyle = '#1F2937';
+    x.fillRect(50, 70, 200, 24);
+    // Body lines
+    x.fillStyle = '#A8B2C8';
+    for (let i = 0; i < 5; i++) x.fillRect(50, 130 + i * 22, 410 - (i % 3) * 60, 8);
+    // Variant: chart at bottom
+    if (variant === 0) {
+      x.fillStyle = '#C9A84C';
+      for (let i = 0; i < 5; i++) {
+        const h = 30 + i * 30;
+        x.fillRect(50 + i * 80, 660 - h, 60, h);
+      }
+    } else if (variant === 1) {
+      // Donut
+      x.strokeStyle = '#C9A84C'; x.lineWidth = 28;
+      x.beginPath(); x.arc(256, 540, 80, -Math.PI / 2, Math.PI * 1.1); x.stroke();
+      x.strokeStyle = '#EFE7CD';
+      x.beginPath(); x.arc(256, 540, 80, Math.PI * 1.1, Math.PI * 1.5); x.stroke();
+    } else {
+      // Just more lines
+      x.fillStyle = '#A8B2C8';
+      for (let i = 0; i < 8; i++) x.fillRect(50, 280 + i * 22, 410 - (i % 4) * 50, 8);
     }
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  }
-  function makeStickyTexture(bg) {
-    const c = document.createElement('canvas'); c.width = 160; c.height = 160;
-    const x = c.getContext('2d');
-    x.fillStyle = bg; x.fillRect(0, 0, 160, 160);
-    x.fillStyle = 'rgba(0,0,0,0.4)';
-    for (let i = 0; i < 5; i++) x.fillRect(16, 30 + i * 22, 110 - (i % 3) * 18, 4);
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  }
-  function makeSpreadTexture() {
-    const c = document.createElement('canvas'); c.width = 240; c.height = 180;
-    const x = c.getContext('2d');
-    x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, 240, 180);
-    x.strokeStyle = '#7A6225'; x.lineWidth = 4; x.strokeRect(2, 2, 236, 176);
-    x.strokeStyle = '#3A3A52'; x.lineWidth = 1.5;
-    for (let r = 0; r <= 6; r++) { x.beginPath(); x.moveTo(8, 14 + r * 24); x.lineTo(232, 14 + r * 24); x.stroke(); }
-    for (let cIdx = 0; cIdx <= 5; cIdx++) { x.beginPath(); x.moveTo(8 + cIdx * 45, 14); x.lineTo(8 + cIdx * 45, 158); x.stroke(); }
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
     return t;
   }
 
-  const TEXTURES = [
-    { tex: makeDocTexture(),       w: 0.7, h: 0.95 },
-    { tex: makeDocTexture(),       w: 0.7, h: 0.95 },
-    { tex: makeMailTexture(),      w: 0.95, h: 0.62 },
-    { tex: makeCalendarTexture(),  w: 0.7, h: 0.78 },
-    { tex: makeStickyTexture('#FFE680'), w: 0.55, h: 0.55 },
-    { tex: makeStickyTexture('#FFB7B7'), w: 0.55, h: 0.55 },
-    { tex: makeStickyTexture('#B7DDFF'), w: 0.55, h: 0.55 },
-    { tex: makeSpreadTexture(),    w: 0.95, h: 0.7 },
+  function makeMailTexture() {
+    const c = document.createElement('canvas'); c.width = 600; c.height = 400;
+    const x = c.getContext('2d');
+    x.fillStyle = '#FFFFFF';
+    roundRect(x, 10, 10, 580, 380, 22); x.fill();
+    x.strokeStyle = '#EFE7CD'; x.lineWidth = 4;
+    roundRect(x, 10, 10, 580, 380, 22); x.stroke();
+    // Envelope flap
+    x.fillStyle = '#FAF2DC';
+    x.beginPath();
+    x.moveTo(10, 22); x.lineTo(300, 230); x.lineTo(590, 22);
+    x.lineTo(590, 200); x.lineTo(10, 200); x.closePath();
+    x.fill();
+    x.strokeStyle = '#C9A84C'; x.lineWidth = 5;
+    x.beginPath(); x.moveTo(10, 22); x.lineTo(300, 230); x.lineTo(590, 22); x.stroke();
+    // @ icon
+    x.fillStyle = '#1F2937'; x.font = 'bold 60px serif';
+    x.textAlign = 'center'; x.fillText('@', 300, 340);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    return t;
+  }
+
+  function makeCalendarTexture() {
+    const c = document.createElement('canvas'); c.width = 480; c.height = 540;
+    const x = c.getContext('2d');
+    x.fillStyle = '#FFFFFF';
+    roundRect(x, 10, 10, 460, 520, 22); x.fill();
+    x.strokeStyle = '#EFE7CD'; x.lineWidth = 4;
+    roundRect(x, 10, 10, 460, 520, 22); x.stroke();
+    // Header
+    x.fillStyle = '#1F2937';
+    roundRect(x, 10, 10, 460, 90, 22); x.fill();
+    x.fillStyle = '#FFFFFF'; x.font = 'bold 48px sans-serif';
+    x.textAlign = 'center'; x.fillText('OCT', 240, 70);
+    // Date dots
+    x.fillStyle = '#A8B2C8';
+    for (let r = 0; r < 5; r++) for (let cIdx = 0; cIdx < 7; cIdx++) {
+      x.beginPath(); x.arc(54 + cIdx * 60, 150 + r * 70, 12, 0, Math.PI * 2); x.fill();
+    }
+    // Highlight one date
+    x.fillStyle = '#C9A84C';
+    x.beginPath(); x.arc(54 + 3 * 60, 150 + 2 * 70, 18, 0, Math.PI * 2); x.fill();
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    return t;
+  }
+
+  function makeStickyTexture(bg, ink) {
+    const c = document.createElement('canvas'); c.width = 400; c.height = 400;
+    const x = c.getContext('2d');
+    x.fillStyle = bg;
+    roundRect(x, 8, 8, 384, 384, 16); x.fill();
+    // Handwritten-ish lines
+    x.strokeStyle = ink || 'rgba(31, 41, 55, 0.7)';
+    x.lineWidth = 14;
+    x.lineCap = 'round';
+    x.beginPath(); x.moveTo(60, 140); x.bezierCurveTo(150, 120, 250, 160, 340, 130); x.stroke();
+    x.beginPath(); x.moveTo(60, 220); x.bezierCurveTo(140, 210, 220, 235, 300, 220); x.stroke();
+    // Check
+    x.lineWidth = 18;
+    x.beginPath(); x.moveTo(80, 320); x.lineTo(140, 360); x.lineTo(260, 280); x.stroke();
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    return t;
+  }
+
+  function makeSpreadTexture() {
+    const c = document.createElement('canvas'); c.width = 600; c.height = 440;
+    const x = c.getContext('2d');
+    x.fillStyle = '#FFFFFF';
+    roundRect(x, 10, 10, 580, 420, 22); x.fill();
+    x.strokeStyle = '#EFE7CD'; x.lineWidth = 4;
+    roundRect(x, 10, 10, 580, 420, 22); x.stroke();
+    // Header row
+    x.fillStyle = '#1F2937';
+    roundRect(x, 10, 10, 580, 50, 22); x.fill();
+    x.fillStyle = '#FFFFFF'; x.font = 'bold 22px sans-serif';
+    x.textAlign = 'left';
+    ['ID', 'Name', 'Status', 'Date', 'Total'].forEach((t, i) => {
+      x.fillText(t, 40 + i * 110, 42);
+    });
+    // Cells
+    x.strokeStyle = '#EFE7CD'; x.lineWidth = 1.5;
+    for (let r = 1; r <= 6; r++) {
+      x.beginPath(); x.moveTo(20, 60 + r * 55); x.lineTo(580, 60 + r * 55); x.stroke();
+      // Some cells filled gold
+      if (r % 2 === 0) {
+        x.fillStyle = 'rgba(201, 168, 76, 0.15)';
+        x.fillRect(20, 60 + r * 55 - 55, 560, 55);
+      }
+    }
+    // Sample data dots
+    x.fillStyle = '#A8B2C8';
+    for (let r = 0; r < 6; r++) for (let cIdx = 0; cIdx < 5; cIdx++) {
+      x.fillRect(40 + cIdx * 110, 90 + r * 55, 60 + (cIdx % 2) * 30, 6);
+    }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    return t;
+  }
+
+  // ── Item types ──
+  const ITEM_TYPES = [
+    { name: 'doc',      tex: makeDocTexture(0), w: 0.78, h: 1.10, depth: 0.04 },
+    { name: 'doc',      tex: makeDocTexture(1), w: 0.78, h: 1.10, depth: 0.04 },
+    { name: 'doc',      tex: makeDocTexture(2), w: 0.78, h: 1.10, depth: 0.04 },
+    { name: 'mail',     tex: makeMailTexture(), w: 1.05, h: 0.70, depth: 0.04 },
+    { name: 'cal',      tex: makeCalendarTexture(), w: 0.85, h: 0.96, depth: 0.06 },
+    { name: 'sticky_y', tex: makeStickyTexture('#F4D86E'), w: 0.62, h: 0.62, depth: 0.06 },
+    { name: 'sticky_c', tex: makeStickyTexture('#E89B7A'), w: 0.62, h: 0.62, depth: 0.06 },
+    { name: 'sticky_b', tex: makeStickyTexture('#93B5D1', 'rgba(13,27,42,0.7)'), w: 0.62, h: 0.62, depth: 0.06 },
+    { name: 'spread',   tex: makeSpreadTexture(), w: 1.10, h: 0.80, depth: 0.04 },
   ];
 
+  // Edge material (visible side faces of the box)
+  const edgeMat = new THREE.MeshStandardMaterial({
+    color: EDGE_COLOR, roughness: 0.85, metalness: 0,
+  });
+  const backMat = new THREE.MeshStandardMaterial({
+    color: 0xF8F2DD, roughness: 0.85, metalness: 0,
+  });
+
   // ── Cluttered items ──
-  const ITEM_COUNT = 55;
+  const ITEM_COUNT = 38;
   const items = [];
 
   for (let i = 0; i < ITEM_COUNT; i++) {
-    const t = TEXTURES[Math.floor(Math.random() * TEXTURES.length)];
-    const geo = new THREE.PlaneGeometry(t.w, t.h);
-    const mat = new THREE.MeshStandardMaterial({
-      map: t.tex,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.97,
-      roughness: 0.7,
-      metalness: 0.0,
-    });
-    const mesh = new THREE.Mesh(geo, mat);
+    const type = ITEM_TYPES[Math.floor(Math.random() * ITEM_TYPES.length)];
+    const geo = new THREE.BoxGeometry(type.w, type.depth, type.h);
 
-    // Distribute mostly on desk surface, some floating slightly
-    const onDesk = Math.random() < 0.7;
-    const px = (Math.random() - 0.5) * 12.5;
-    const pz = (Math.random() - 0.5) * 6.0;
+    // BoxGeometry face order: [+x, -x, +y, -y, +z, -z]
+    // For items lying flat on desk (rotated -PI/2 on X), we want texture on top face (+y)
+    const faceMat = new THREE.MeshStandardMaterial({
+      map: type.tex, roughness: 0.75, metalness: 0,
+    });
+    const materials = [edgeMat, edgeMat, faceMat, backMat, edgeMat, edgeMat];
+    const mesh = new THREE.Mesh(geo, materials);
+
+    // Position: scattered on desk, mostly resting
+    const onDesk = Math.random() < 0.78;
+    const px = (Math.random() - 0.5) * 13;
+    const pz = (Math.random() - 0.5) * 6.5;
     const py = onDesk
-      ? 0.02 + Math.random() * 0.08          // resting on desk
-      : 0.3 + Math.random() * 1.2;           // floating
+      ? type.depth / 2 + Math.random() * 0.05
+      : 0.3 + Math.random() * 1.0;
 
     mesh.position.set(px, py, pz);
-
-    // Mostly flat, slight tilt
+    // Lay flat with random Y rotation
     mesh.rotation.set(
-      -Math.PI / 2 + (Math.random() - 0.5) * 0.5,
-      Math.random() * Math.PI,
-      (Math.random() - 0.5) * 0.4,
+      0,
+      Math.random() * Math.PI * 2,
+      (Math.random() - 0.5) * 0.15,
     );
+    // If floating, slight tilt
+    if (!onDesk) {
+      mesh.rotation.x = (Math.random() - 0.5) * 0.4;
+      mesh.rotation.z = (Math.random() - 0.5) * 0.4;
+    }
 
     items.push({
       mesh,
       basePos: mesh.position.clone(),
       baseRot: mesh.rotation.clone(),
       seed: Math.random() * Math.PI * 2,
-      driftSpeed: 0.4 + Math.random() * 0.4,
-      // Distance from center (used for stagger order — closer items absorbed last for drama)
       dist: Math.sqrt(px * px + pz * pz),
     });
     scene.add(mesh);
   }
-  // Sort by distance — far items absorbed first, near last
+  // Far items absorbed first
   items.sort((a, b) => b.dist - a.dist);
 
-  // ── AI Orb (rises from desk during Act 2) ──
+  // ── AI Orb ──
   const aiOrb = new THREE.Mesh(
-    new THREE.SphereGeometry(0.45, 32, 32),
-    new THREE.MeshBasicMaterial({ color: ACCENT }),
+    new THREE.SphereGeometry(0.42, 32, 32),
+    new THREE.MeshStandardMaterial({
+      color: ACCENT, emissive: ACCENT, emissiveIntensity: 0.5,
+      roughness: 0.3, metalness: 0.5,
+    }),
   );
-  aiOrb.position.set(0, 0.25, 0);
+  aiOrb.position.set(0, 0.35, 0);
   aiOrb.scale.setScalar(0);
   scene.add(aiOrb);
 
-  // Halo ring on desk surface
+  // Ground halo
   const haloMat = new THREE.MeshBasicMaterial({
     color: ACCENT, transparent: true, opacity: 0, side: THREE.DoubleSide,
   });
-  const halo = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.95, 64), haloMat);
+  const halo = new THREE.Mesh(new THREE.RingGeometry(0.55, 1.6, 64), haloMat);
   halo.rotation.x = -Math.PI / 2;
   halo.position.set(0, 0.005, 0);
   scene.add(halo);
 
-  // Outer halo
-  const halo2Mat = new THREE.MeshBasicMaterial({
-    color: ACCENT_DEEP, transparent: true, opacity: 0, side: THREE.DoubleSide,
-  });
-  const halo2 = new THREE.Mesh(new THREE.RingGeometry(1.1, 1.4, 64), halo2Mat);
-  halo2.rotation.x = -Math.PI / 2;
-  halo2.position.set(0, 0.003, 0);
-  scene.add(halo2);
-
-  // Light from orb (illuminates the desk dynamically)
-  const orbLight = new THREE.PointLight(ACCENT, 0, 12);
-  orbLight.position.set(0, 0.6, 0);
+  const orbLight = new THREE.PointLight(ACCENT, 0, 14);
+  orbLight.position.set(0, 0.7, 0);
   scene.add(orbLight);
 
-  // ── After-state cards (organized output, appear in Act 3) ──
-  function makeDashboardTexture(label) {
-    const c = document.createElement('canvas'); c.width = 320; c.height = 200;
+  // ── After-state cards (Act 3) ──
+  function makeDashboardTexture(label, variant) {
+    const c = document.createElement('canvas'); c.width = 640; c.height = 400;
     const x = c.getContext('2d');
-    x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, 320, 200);
-    x.strokeStyle = '#C9A84C'; x.lineWidth = 4; x.strokeRect(2, 2, 316, 196);
-    // Top bar
-    x.fillStyle = '#C9A84C'; x.fillRect(0, 0, 320, 30);
-    x.fillStyle = '#FFFFFF'; x.font = 'bold 14px "Noto Sans JP", sans-serif';
-    x.textAlign = 'left'; x.fillText(label, 14, 21);
-    // Check icon
-    x.font = 'bold 16px sans-serif'; x.textAlign = 'right'; x.fillText('✓', 308, 22);
-    // Body chart-like content
-    x.fillStyle = '#1F2937'; x.font = 'bold 13px sans-serif';
-    x.textAlign = 'left'; x.fillText('AI Auto-organized', 14, 56);
-    x.fillStyle = '#A8B2C8';
-    for (let i = 0; i < 4; i++) x.fillRect(14, 74 + i * 14, 280 - i * 30, 5);
-    // Bar chart
+    x.fillStyle = '#FFFFFF';
+    roundRect(x, 10, 10, 620, 380, 18); x.fill();
+    x.strokeStyle = '#EFE7CD'; x.lineWidth = 4;
+    roundRect(x, 10, 10, 620, 380, 18); x.stroke();
+    // Header
     x.fillStyle = '#C9A84C';
-    for (let i = 0; i < 5; i++) {
-      const bh = 14 + i * 12;
-      x.fillRect(14 + i * 38, 188 - bh, 28, bh);
+    roundRect(x, 10, 10, 620, 56, 18); x.fill();
+    x.fillStyle = '#FFFFFF'; x.font = 'bold 22px "Noto Sans JP", sans-serif';
+    x.textAlign = 'left'; x.fillText(label, 30, 44);
+    x.font = 'bold 24px sans-serif'; x.textAlign = 'right';
+    x.fillText('✓', 610, 46);
+    // Body
+    if (variant === 0) {
+      // Bar chart
+      x.fillStyle = '#C9A84C';
+      for (let i = 0; i < 6; i++) {
+        const h = 60 + i * 30;
+        x.fillRect(40 + i * 95, 350 - h, 70, h);
+      }
+    } else if (variant === 1) {
+      // Lines + small donut
+      x.fillStyle = '#A8B2C8';
+      for (let i = 0; i < 5; i++) x.fillRect(30, 110 + i * 30, 380 - i * 40, 14);
+      x.strokeStyle = '#C9A84C'; x.lineWidth = 36;
+      x.beginPath(); x.arc(530, 230, 70, -Math.PI / 2, Math.PI * 1.0); x.stroke();
+      x.strokeStyle = '#EFE7CD';
+      x.beginPath(); x.arc(530, 230, 70, Math.PI * 1.0, Math.PI * 1.5); x.stroke();
+    } else {
+      // Progress bars
+      x.fillStyle = '#A8B2C8';
+      for (let i = 0; i < 5; i++) {
+        x.fillRect(30, 110 + i * 50, 200, 16);
+        x.fillRect(250, 110 + i * 50, 360, 16);
+        x.fillStyle = '#C9A84C';
+        x.fillRect(250, 110 + i * 50, 360 * (0.3 + i * 0.15), 16);
+        x.fillStyle = '#A8B2C8';
+      }
     }
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
     return t;
   }
 
-  const afterCards = [];
   const cardLabels = ['議事録 自動要約', 'メール 下書き', 'プロジェクト 進捗'];
+  const afterCards = [];
   for (let i = 0; i < 3; i++) {
-    const tex = makeDashboardTexture(cardLabels[i]);
-    const cardGeo = new THREE.PlaneGeometry(1.7, 1.05);
-    const cardMat = new THREE.MeshStandardMaterial({
-      map: tex,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0,
-      roughness: 0.4,
+    const tex = makeDashboardTexture(cardLabels[i], i);
+    const cardGeo = new THREE.BoxGeometry(1.95, 0.05, 1.20);
+    const faceMat = new THREE.MeshStandardMaterial({
+      map: tex, roughness: 0.6, metalness: 0,
+      transparent: true, opacity: 0,
     });
-    const card = new THREE.Mesh(cardGeo, cardMat);
-    card.position.set(-2.0 + i * 2.0, 1.4, -0.5);
-    card.rotation.x = -Math.PI / 7;
+    const eMat = new THREE.MeshStandardMaterial({
+      color: EDGE_COLOR, roughness: 0.7, transparent: true, opacity: 0,
+    });
+    const bMat = new THREE.MeshStandardMaterial({
+      color: 0xFFFFFF, roughness: 0.6, transparent: true, opacity: 0,
+    });
+    const card = new THREE.Mesh(cardGeo, [eMat, eMat, faceMat, bMat, eMat, eMat]);
+    // Place tilted, floating above the desk
+    card.position.set(-2.4 + i * 2.4, 1.55, -0.3);
+    card.rotation.set(-Math.PI / 5, 0, 0);
     card.scale.setScalar(0);
-    afterCards.push({ mesh: card, mat: cardMat });
+    afterCards.push({ mesh: card, mats: [eMat, eMat, faceMat, bMat, eMat, eMat] });
     scene.add(card);
   }
 
@@ -269,7 +375,6 @@ export function createHeroScene(canvas) {
   };
   window.addEventListener('mousemove', onMouseMove, { passive: true });
 
-  // ── State ──
   let progress = 0;
   function setProgress(p) { progress = Math.max(0, Math.min(1, p)); }
 
@@ -287,30 +392,23 @@ export function createHeroScene(canvas) {
     const t = clock.getElapsedTime();
     const p = progress;
 
-    // Phase factors
-    const f_orbAppear = smoothstep(0.25, 0.45, p);
-    const f_clean     = smoothstep(0.78, 0.95, p);
+    const f_orb   = smoothstep(0.25, 0.45, p);
+    const f_clean = smoothstep(0.78, 0.95, p);
 
-    // ── Items: drift in chaos, absorbed during Act 2 (with stagger) ──
-    const ABSORB_START = 0.30;
-    const ABSORB_END   = 0.78;
-    const ABSORB_DURATION = ABSORB_END - ABSORB_START;
+    // Items
     const N = items.length;
-
     items.forEach((item, i) => {
-      // Stagger across the absorption window
-      const myStart = ABSORB_START + (i / N) * (ABSORB_DURATION * 0.7);
-      const myDur   = ABSORB_DURATION * 0.3;
+      const myStart = 0.30 + (i / N) * 0.42;
+      const myDur = 0.16;
       const localT = (p - myStart) / myDur;
       const absorb = Math.max(0, Math.min(1, localT));
       const eased = easeOutCubic(absorb);
 
-      // Idle drift while in chaos
-      const drift = (1 - absorb) * 0.05;
-      const yBob = Math.sin(t * 0.4 + item.seed) * drift;
-      const xWobble = Math.cos(t * 0.3 + item.seed * 1.3) * drift;
+      // Idle drift
+      const drift = (1 - absorb) * 0.04;
+      const yBob = Math.sin(t * 0.5 + item.seed) * drift;
+      const xWobble = Math.cos(t * 0.4 + item.seed * 1.3) * drift;
 
-      // Position lerp from base to AI orb
       const ox = aiOrb.position.x;
       const oy = aiOrb.position.y;
       const oz = aiOrb.position.z;
@@ -318,47 +416,42 @@ export function createHeroScene(canvas) {
       item.mesh.position.y = item.basePos.y + yBob + (oy - item.basePos.y) * eased;
       item.mesh.position.z = item.basePos.z + (oz - item.basePos.z) * eased;
 
-      // Shrink and fade
+      // Shrink
       const scale = 1 - eased * 0.95;
       item.mesh.scale.setScalar(scale);
-      item.mesh.material.opacity = 0.97 * (1 - eased);
 
-      // Subtle rotation animation while drifting
-      item.mesh.rotation.z = item.baseRot.z + Math.sin(t * 0.4 + item.seed) * 0.04 * (1 - absorb);
+      // Subtle rotation while drifting
+      item.mesh.rotation.y = item.baseRot.y + Math.sin(t * 0.3 + item.seed) * 0.03 * (1 - absorb);
     });
 
-    // ── AI Orb: rises and pulses ──
-    const orbBaseScale = f_orbAppear;
-    const orbPulse = 1 + Math.sin(t * 2.2) * 0.08;
-    aiOrb.scale.setScalar(orbBaseScale * orbPulse * (1 - f_clean * 0.3));
+    // AI Orb
+    const orbScale = f_orb * (1 + Math.sin(t * 2.2) * 0.06);
+    aiOrb.scale.setScalar(orbScale * (1 - f_clean * 0.4));
+    aiOrb.material.emissiveIntensity = 0.5 + Math.sin(t * 2) * 0.2;
 
-    // Halos pulse outward
-    haloMat.opacity = 0.55 * f_orbAppear * (1 - f_clean);
-    halo.scale.setScalar(1 + Math.sin(t * 1.5) * 0.1);
-    halo2Mat.opacity = 0.3 * f_orbAppear * (1 - f_clean);
-    halo2.scale.setScalar(1 + Math.cos(t * 1.2) * 0.08 + f_orbAppear * 0.5);
+    haloMat.opacity = 0.45 * f_orb * (1 - f_clean);
+    halo.scale.setScalar(1 + Math.sin(t * 1.5) * 0.08 + f_orb * 0.4);
 
-    orbLight.intensity = f_orbAppear * 2.2 * (1 - f_clean * 0.5);
+    orbLight.intensity = f_orb * 2.2 * (1 - f_clean * 0.6);
 
-    // ── Act 3 cards: appear after items absorbed ──
+    // Act 3 cards
     afterCards.forEach((card, i) => {
-      const myStart = 0.82 + i * 0.04;
-      const localT = (p - myStart) / 0.12;
+      const myStart = 0.83 + i * 0.04;
+      const localT = (p - myStart) / 0.10;
       const cP = Math.max(0, Math.min(1, localT));
       const ease = easeOutCubic(cP);
       card.mesh.scale.setScalar(ease);
-      card.mat.opacity = ease;
-      // Subtle floating
-      card.mesh.position.y = 1.4 + Math.sin(t * 0.7 + i * 0.5) * 0.04;
+      card.mats.forEach((m) => { m.opacity = ease; });
+      card.mesh.position.y = 1.55 + Math.sin(t * 0.6 + i * 0.7) * 0.04;
     });
 
-    // ── Camera parallax ──
-    mouseX += (targetMouseX - mouseX) * 0.04;
-    mouseY += (targetMouseY - mouseY) * 0.04;
-    camera.position.x = 2.4 + mouseX * 0.6;
-    camera.position.y = 4.6 - mouseY * 0.4;
-    camera.position.z = 8.5 - f_orbAppear * 0.3;
-    camera.lookAt(0, 0.6 + f_clean * 0.3, 0);
+    // Camera parallax
+    mouseX += (targetMouseX - mouseX) * 0.05;
+    mouseY += (targetMouseY - mouseY) * 0.05;
+    camera.position.x = 2.8 + mouseX * 0.5;
+    camera.position.y = 5.0 - mouseY * 0.3;
+    camera.position.z = 9 - f_orb * 0.4;
+    camera.lookAt(0, 0.5 + f_clean * 0.4, 0);
 
     renderer.render(scene, camera);
     frameId = requestAnimationFrame(animate);
