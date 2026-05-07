@@ -90,6 +90,44 @@
   }
 
   .rule-gold { @apply block w-12 h-px bg-gold-600; }
+
+  /* ── FAQ (light theme) ── */
+  .faq-item-light { @apply border-b border-line-200; }
+  .faq-question-light {
+    @apply w-full flex items-center justify-between gap-6
+           py-6 text-left font-sans font-semibold text-h3 text-ink-900
+           transition-colors duration-200 hover:text-gold-700;
+  }
+  .faq-question-light .faq-icon { @apply text-gold-700; }
+  .faq-answer-wrap {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+  }
+  .faq-answer-wrap.is-open { max-height: 600px; }
+  .faq-answer-light { @apply pb-6 text-body text-ink-700 leading-relaxed; }
+
+  /* ── Contact form inputs (dark section) ── */
+  .form-input {
+    @apply w-full px-4 py-3 bg-white/[0.04] text-white
+           border border-line-700 font-sans text-body
+           transition-colors duration-200
+           focus:outline-none focus:border-gold-500;
+  }
+  select.form-input {
+    @apply bg-navy-800 appearance-none pr-10;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%23C9A84C' stroke-width='1.5'><path d='M1 1l5 5 5-5'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+  }
+  select.form-input option {
+    background-color: #1B2A4A;
+    color: #FFFFFF;
+  }
+  input[type="date"].form-input {
+    color-scheme: dark;
+  }
+  .form-label { @apply block font-sans text-small font-semibold text-white mb-2; }
 }
 
 @layer utilities {

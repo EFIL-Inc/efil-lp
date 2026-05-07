@@ -133,6 +133,121 @@ if (laptopSection && laptopCanvas) {
   }
 }
 
+// ───────────────────────────────────────────────────────────
+// FAQ accordion
+// ───────────────────────────────────────────────────────────
+document.querySelectorAll('.faq-question-light').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const wrap = btn.nextElementSibling;
+    const icon = btn.querySelector('.faq-icon');
+    const isOpen = wrap.classList.contains('is-open');
+    if (isOpen) {
+      wrap.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+      if (icon) { icon.textContent = '+'; icon.style.transform = 'rotate(0deg)'; }
+    } else {
+      wrap.classList.add('is-open');
+      btn.setAttribute('aria-expanded', 'true');
+      if (icon) { icon.textContent = '−'; icon.style.transform = 'rotate(180deg)'; }
+    }
+  });
+});
+
+// ───────────────────────────────────────────────────────────
+// Contact form: validation + FormSubmit AJAX
+// ───────────────────────────────────────────────────────────
+const contactForm = document.getElementById('contact-form');
+if (contactForm) {
+  const successBox = document.getElementById('form-success');
+  const submitBtn = contactForm.querySelector('button[type="submit"]');
+
+  // Set min date for all date fields to tomorrow
+  (() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const min = tomorrow.toISOString().split('T')[0];
+    ['date1', 'date2', 'date3'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.min = min;
+    });
+  })();
+
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    let valid = true;
+
+    const fields = [
+      { id: 'name',    test: (v) => v.trim().length > 0 },
+      { id: 'company', test: (v) => v.trim().length > 0 },
+      { id: 'email',   test: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) },
+    ];
+    fields.forEach(({ id, test }) => {
+      const input = document.getElementById(id);
+      if (!input) return;
+      const err = input.parentElement.querySelector('.error-msg');
+      if (!test(input.value)) {
+        if (err) err.classList.remove('hidden');
+        input.classList.add('border-gold-500');
+        input.setAttribute('aria-invalid', 'true');
+        valid = false;
+      } else {
+        if (err) err.classList.add('hidden');
+        input.classList.remove('border-gold-500');
+        input.removeAttribute('aria-invalid');
+      }
+    });
+
+    // Date+time pairing: if one of pair filled, both required
+    [1, 2, 3].forEach((n) => {
+      const dateEl = document.getElementById('date' + n);
+      const timeEl = document.getElementById('time' + n);
+      if (!dateEl || !timeEl) return;
+      const oneFilled = (dateEl.value && !timeEl.value) || (!dateEl.value && timeEl.value);
+      if (oneFilled) {
+        if (!dateEl.value) dateEl.classList.add('border-gold-500');
+        if (!timeEl.value) timeEl.classList.add('border-gold-500');
+        valid = false;
+      } else {
+        dateEl.classList.remove('border-gold-500');
+        timeEl.classList.remove('border-gold-500');
+      }
+    });
+
+    if (!valid) {
+      if (successBox) successBox.classList.add('hidden');
+      return;
+    }
+
+    // Submit via FormSubmit AJAX endpoint
+    submitBtn.disabled = true;
+    const originalBtnHTML = submitBtn.innerHTML;
+    submitBtn.textContent = '送信中...';
+
+    try {
+      const formData = new FormData(contactForm);
+      const res = await fetch(contactForm.action, {
+        method: 'POST',
+        body: formData,
+        headers: { 'Accept': 'application/json' },
+      });
+      if (res.ok) {
+        if (successBox) {
+          successBox.classList.remove('hidden');
+          successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        contactForm.reset();
+      } else {
+        throw new Error('Submit failed');
+      }
+    } catch (err) {
+      alert('送信に失敗しました。お手数ですが、しばらく経ってから再度お試しください。');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnHTML;
+    }
+  });
+}
+
 // Make sure ScrollTrigger picks up final layout + initial scroll position
 window.addEventListener('load', () => {
   ScrollTrigger.refresh();
