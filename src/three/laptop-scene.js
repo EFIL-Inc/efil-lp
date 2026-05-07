@@ -487,103 +487,212 @@ export function createLaptopScene(canvas) {
   }
 
   // ─────────────────────────────────────────────────────────
-  // 04. 採用 — Score bars filling & sorting
+  // 04. プロジェクト管理 — Gantt chart with real-time updates
   // ─────────────────────────────────────────────────────────
-  const CANDIDATES = [
-    { name: '佐藤 太郎', target: 92 },
-    { name: '田中 花子', target: 87 },
-    { name: '鈴木 一郎', target: 81 },
-    { name: '高橋 真子', target: 76 },
-    { name: '渡辺 健', target: 65 },
-    { name: '伊藤 美咲', target: 58 },
+  const PROJECT_TASKS = [
+    { name: '要件定義',      start: 0,  duration: 2 },
+    { name: '戦略設計',      start: 2,  duration: 3 },
+    { name: 'UI / UX 設計',  start: 4,  duration: 3 },
+    { name: '実装フェーズ1', start: 5,  duration: 4 },
+    { name: '実装フェーズ2', start: 8,  duration: 4 },
+    { name: 'QA・テスト',    start: 11, duration: 2 },
+    { name: 'リリース',      start: 13, duration: 1 },
+    { name: '定着支援',      start: 14, duration: 4 },
   ];
+  const TOTAL_WEEKS = 18;
+  const TODAY_WEEK = 7.5; // current snapshot
 
   function renderCandidates(t) {
+    // Renamed conceptually but keeps function name to avoid touching registry
+    renderProject(t);
+  }
+
+  function renderProject(t) {
     ctx.fillStyle = '#FAF7F2';
     ctx.fillRect(0, 36, W, H - 36);
 
+    // Title
     ctx.fillStyle = '#1F2937';
     ctx.font = 'bold 18px "Noto Sans JP"';
-    ctx.fillText('応募者リスト · AI評価中', 50, 80);
-    ctx.fillStyle = '#6B7280';
-    ctx.font = '14px "Noto Sans JP"';
-    ctx.fillText(`${CANDIDATES.length} 名を解析`, 50, 102);
-
-    // Spinner
-    const spinAngle = t * 4;
-    ctx.save();
-    ctx.translate(W - 80, 92);
-    ctx.rotate(spinAngle);
-    ctx.strokeStyle = ACCENT;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(0, 0, 14, 0, Math.PI * 1.6);
-    ctx.stroke();
-    ctx.restore();
+    ctx.fillText('AIコンサル案件 · 進捗ダッシュボード', 50, 80);
     ctx.fillStyle = ACCENT;
     ctx.font = 'bold 13px "Noto Sans JP"';
-    ctx.textAlign = 'right';
-    ctx.fillText('Analyzing...', W - 110, 96);
-    ctx.textAlign = 'left';
+    ctx.fillText('● AI が自動でスケジューリング', 50, 102);
 
-    // Each candidate appears with stagger, bar fills
-    const STAGGER = 0.45;
-    const BAR_FILL_TIME = 0.6;
-    let y = 150;
+    // Live status indicator (top right)
+    const pulse = 0.5 + Math.sin(t * 4) * 0.5;
+    ctx.fillStyle = `rgba(63, 183, 82, ${0.6 + pulse * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(W - 156, 96, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#3FB752';
+    ctx.font = 'bold 12px "Noto Sans JP"';
+    ctx.fillText('LIVE', W - 144, 100);
 
-    CANDIDATES.forEach((c, i) => {
+    // Layout
+    const labelW = 158;
+    const chartX = 50 + labelW + 12;
+    const chartTop = 142;
+    const rowH = 38;
+    const barH = 18;
+    const totalHeight = PROJECT_TASKS.length * rowH;
+    const chartW = W - chartX - 60;
+    const weekW = chartW / TOTAL_WEEKS;
+
+    // Week headers
+    ctx.fillStyle = '#6B7280';
+    ctx.font = '10px "Noto Sans JP"';
+    for (let w = 0; w <= TOTAL_WEEKS; w += 2) {
+      const x = chartX + w * weekW;
+      if (w < TOTAL_WEEKS) {
+        ctx.fillText(`W${w + 1}`, x + 3, chartTop - 8);
+      }
+    }
+
+    // Vertical grid lines (every 2 weeks)
+    ctx.strokeStyle = '#E8E2D5';
+    ctx.lineWidth = 1;
+    for (let w = 0; w <= TOTAL_WEEKS; w += 2) {
+      const x = chartX + w * weekW;
+      ctx.beginPath();
+      ctx.moveTo(x, chartTop);
+      ctx.lineTo(x, chartTop + totalHeight);
+      ctx.stroke();
+    }
+
+    // Left vertical separator
+    ctx.strokeStyle = '#D5CFB8';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(chartX, chartTop);
+    ctx.lineTo(chartX, chartTop + totalHeight);
+    ctx.stroke();
+
+    // Tasks (bars with stagger draw-in)
+    const STAGGER = 0.18;
+    const DRAW_TIME = 0.7;
+
+    PROJECT_TASKS.forEach((task, i) => {
       const localT = t - i * STAGGER;
       if (localT < 0) return;
+      const drawProg = Math.min(1, localT / DRAW_TIME);
+      const ease = 1 - Math.pow(1 - drawProg, 3);
+      const opacity = Math.min(1, localT * 2);
 
-      const fillProgress = Math.min(1, localT / BAR_FILL_TIME);
-      const ease = 1 - Math.pow(1 - fillProgress, 3);
-      const currentScore = Math.floor(c.target * ease);
+      const rowY = chartTop + 6 + i * rowH;
+      const barY = rowY;
 
-      // Slide-in
-      const slide = Math.min(1, localT * 2);
-      ctx.globalAlpha = slide;
+      // Status from TODAY position
+      const taskEnd = task.start + task.duration;
+      let status;
+      if (taskEnd <= TODAY_WEEK) status = 'done';
+      else if (task.start <= TODAY_WEEK) status = 'inprogress';
+      else status = 'planned';
 
-      // Name
+      ctx.globalAlpha = opacity;
+
+      // Status icon
+      const statusColor = status === 'done' ? '#3FB752'
+                        : status === 'inprogress' ? ACCENT
+                        : '#A8B2C8';
+      ctx.fillStyle = statusColor;
+      ctx.beginPath();
+      ctx.arc(56, rowY + 9, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Task name
       ctx.fillStyle = '#1F2937';
-      ctx.font = '17px "Noto Sans JP"';
-      ctx.fillText(c.name, 60, y);
+      ctx.font = '14px "Noto Sans JP"';
+      ctx.fillText(task.name, 70, rowY + 13);
 
-      // Bar background
-      ctx.fillStyle = '#E8E2D5';
-      ctx.fillRect(220, y - 16, 600, 22);
+      // Bar background rail
+      const barStartX = chartX + task.start * weekW + 2;
+      const barFullW = task.duration * weekW - 4;
+      ctx.fillStyle = '#F0EDE5';
+      ctx.fillRect(barStartX, barY, barFullW, barH);
 
-      // Bar fill
-      const grad = ctx.createLinearGradient(220, 0, 820, 0);
-      if (currentScore > 80) {
+      // Bar fill (animated draw-in)
+      const drawnW = barFullW * ease;
+      if (status === 'done') {
+        const grad = ctx.createLinearGradient(barStartX, 0, barStartX + drawnW, 0);
+        grad.addColorStop(0, '#A88838');
+        grad.addColorStop(1, '#7A6225');
+        ctx.fillStyle = grad;
+        ctx.fillRect(barStartX, barY, drawnW, barH);
+        // Check icon at end
+        if (drawProg >= 1) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.fillText('✓', barStartX + drawnW - 14, barY + 13);
+        }
+      } else if (status === 'inprogress') {
+        // Animated gold fill
+        const grad = ctx.createLinearGradient(barStartX, 0, barStartX + drawnW, 0);
         grad.addColorStop(0, ACCENT);
-        grad.addColorStop(1, ACCENT_DEEP);
-      } else if (currentScore > 70) {
-        grad.addColorStop(0, '#E2B23A');
-        grad.addColorStop(1, '#A88838');
+        grad.addColorStop(1, '#E2B23A');
+        ctx.fillStyle = grad;
+        ctx.fillRect(barStartX, barY, drawnW, barH);
+        // Animated progress stripe
+        if (drawProg >= 1) {
+          const stripePhase = (t * 0.45) % 1;
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.32)';
+          ctx.fillRect(barStartX + drawnW * stripePhase - 14, barY, 28, barH);
+        }
+        // % progress text
+        if (drawProg >= 1) {
+          const elapsed = TODAY_WEEK - task.start;
+          const taskProg = Math.min(100, Math.round((elapsed / task.duration) * 100));
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = 'bold 11px "Noto Sans JP"';
+          ctx.fillText(`${taskProg}%`, barStartX + 6, barY + 13);
+        }
       } else {
-        grad.addColorStop(0, '#A8B2C8');
-        grad.addColorStop(1, '#6B7280');
-      }
-      ctx.fillStyle = grad;
-      ctx.fillRect(220, y - 16, 600 * (c.target / 100) * ease, 22);
-
-      // Score number
-      ctx.fillStyle = currentScore > 80 ? ACCENT_DEEP : '#3A3A52';
-      ctx.font = 'bold 17px "Noto Sans JP"';
-      ctx.textAlign = 'right';
-      ctx.fillText(`${currentScore}%`, W - 60, y);
-      ctx.textAlign = 'left';
-
-      // Top candidate badge
-      if (i === 0 && fillProgress >= 1) {
-        const pulse = 0.5 + Math.sin(t * 4) * 0.5;
-        ctx.fillStyle = `rgba(201, 168, 76, ${0.7 + pulse * 0.3})`;
-        ctx.fillRect(40, y - 18, 4, 26);
+        // planned: dashed outline only (no fill)
+        if (drawProg > 0) {
+          ctx.strokeStyle = ACCENT;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 3]);
+          ctx.strokeRect(barStartX, barY, drawnW, barH);
+          ctx.setLineDash([]);
+        }
       }
 
       ctx.globalAlpha = 1;
-      y += 60;
     });
+
+    // TODAY indicator (vertical pulsing line)
+    const todayX = chartX + TODAY_WEEK * weekW;
+    const linePulse = 0.5 + Math.sin(t * 3.5) * 0.5;
+    ctx.fillStyle = `rgba(224, 82, 76, ${0.65 + linePulse * 0.35})`;
+    ctx.fillRect(todayX, chartTop - 14, 2, totalHeight + 18);
+    ctx.fillStyle = '#E0524C';
+    ctx.font = 'bold 10px "Noto Sans JP"';
+    ctx.fillText('TODAY', todayX + 5, chartTop - 18);
+
+    // AI Suggestion popup (after all bars drawn)
+    const allDoneAt = PROJECT_TASKS.length * STAGGER + DRAW_TIME;
+    if (t > allDoneAt) {
+      const sT = t - allDoneAt;
+      const slide = Math.min(1, sT * 2);
+      const ease = 1 - Math.pow(1 - slide, 3);
+      const popX = W - 332;
+      const popY = H - 110 - (1 - ease) * 24;
+      const opacity = slide;
+
+      ctx.globalAlpha = opacity;
+      ctx.fillStyle = 'rgba(122, 98, 37, 0.18)';
+      ctx.fillRect(popX + 4, popY + 4, 272, 76);
+      ctx.fillStyle = ACCENT;
+      ctx.fillRect(popX, popY, 272, 76);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 14px "Noto Sans JP"';
+      ctx.fillText('✨ AI 提案', popX + 16, popY + 26);
+      ctx.font = '12px "Noto Sans JP"';
+      ctx.fillText('実装フェーズ2 を 1週間前倒し可能', popX + 16, popY + 48);
+      ctx.fillText('リリース日を維持し、リスクバッファ確保', popX + 16, popY + 66);
+      ctx.globalAlpha = 1;
+    }
   }
 
   // ─────────────────────────────────────────────────────────
@@ -1009,7 +1118,7 @@ export function createLaptopScene(canvas) {
     { title: '議事録', subtitle: 'AI Live Transcription', render: renderTranscript },
     { title: 'メール', subtitle: 'Smart Reply Composer', render: renderMail },
     { title: '営業資料', subtitle: 'Slide Auto-Generator', render: renderSlides },
-    { title: '採用',     subtitle: 'Candidate Auto-Screening', render: renderCandidates },
+    { title: 'プロジェクト管理', subtitle: 'Auto Gantt Scheduling', render: renderCandidates },
     { title: '契約書',   subtitle: 'Risk Detection', render: renderContract },
     { title: 'SNS',     subtitle: 'Post Generator', render: renderSNS },
     { title: '業務システム', subtitle: 'No-Code Builder', render: renderBuilder, dark: true },
