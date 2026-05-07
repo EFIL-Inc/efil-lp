@@ -272,23 +272,64 @@ export function createHeroScene(canvas) {
   // Far items absorbed first
   items.sort((a, b) => b.dist - a.dist);
 
-  // ── AI Orb ──
+  // ── AI Core (icosahedron + "AI" billboard label) ──
   const aiOrb = new THREE.Mesh(
-    new THREE.SphereGeometry(0.42, 32, 32),
+    new THREE.IcosahedronGeometry(0.45, 0),
     new THREE.MeshStandardMaterial({
-      color: ACCENT, emissive: ACCENT, emissiveIntensity: 0.5,
-      roughness: 0.3, metalness: 0.5,
+      color: ACCENT, emissive: ACCENT, emissiveIntensity: 0.45,
+      roughness: 0.28, metalness: 0.65,
+      flatShading: true, // make facets visible
     }),
   );
-  aiOrb.position.set(0, 0.35, 0);
+  aiOrb.position.set(0, 0.45, 0);
   aiOrb.scale.setScalar(0);
   scene.add(aiOrb);
+
+  // "AI" label (billboard — always faces camera)
+  function makeAILabelTexture() {
+    const c = document.createElement('canvas');
+    c.width = 384; c.height = 192;
+    const x = c.getContext('2d');
+    x.clearRect(0, 0, 384, 192);
+    // White card with gold border
+    x.fillStyle = '#FFFFFF';
+    roundRect(x, 12, 12, 360, 168, 24); x.fill();
+    x.strokeStyle = '#C9A84C'; x.lineWidth = 5;
+    roundRect(x, 12, 12, 360, 168, 24); x.stroke();
+    // Top accent
+    x.fillStyle = '#C9A84C';
+    roundRect(x, 12, 12, 360, 16, 12); x.fill();
+    // "AI" text
+    x.fillStyle = '#C9A84C';
+    x.font = 'bold 110px "Noto Serif JP", serif';
+    x.textAlign = 'center';
+    x.textBaseline = 'middle';
+    x.fillText('AI', 192, 110);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = 4;
+    return t;
+  }
+  const aiLabelMat = new THREE.MeshBasicMaterial({
+    map: makeAILabelTexture(),
+    transparent: true,
+    opacity: 0,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const aiLabel = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.0, 0.5),
+    aiLabelMat,
+  );
+  aiLabel.position.set(0, 1.4, 0);
+  aiLabel.scale.setScalar(0);
+  scene.add(aiLabel);
 
   // Ground halo
   const haloMat = new THREE.MeshBasicMaterial({
     color: ACCENT, transparent: true, opacity: 0, side: THREE.DoubleSide,
   });
-  const halo = new THREE.Mesh(new THREE.RingGeometry(0.55, 1.6, 64), haloMat);
+  const halo = new THREE.Mesh(new THREE.RingGeometry(0.6, 1.6, 64), haloMat);
   halo.rotation.x = -Math.PI / 2;
   halo.position.set(0, 0.005, 0);
   scene.add(halo);
@@ -424,10 +465,19 @@ export function createHeroScene(canvas) {
       item.mesh.rotation.y = item.baseRot.y + Math.sin(t * 0.3 + item.seed) * 0.03 * (1 - absorb);
     });
 
-    // AI Orb
+    // AI core (icosahedron rotates slowly to catch light on facets)
     const orbScale = f_orb * (1 + Math.sin(t * 2.2) * 0.06);
     aiOrb.scale.setScalar(orbScale * (1 - f_clean * 0.4));
+    aiOrb.rotation.x = t * 0.35;
+    aiOrb.rotation.y = t * 0.25;
     aiOrb.material.emissiveIntensity = 0.5 + Math.sin(t * 2) * 0.2;
+
+    // AI label (billboard) — always faces camera, rises with orb
+    const labelScale = f_orb;
+    aiLabel.scale.setScalar(labelScale * (1 - f_clean * 0.5));
+    aiLabel.material.opacity = labelScale * (1 - f_clean * 0.6);
+    aiLabel.position.y = 1.4 + Math.sin(t * 1.2) * 0.04;
+    aiLabel.lookAt(camera.position);
 
     haloMat.opacity = 0.45 * f_orb * (1 - f_clean);
     halo.scale.setScalar(1 + Math.sin(t * 1.5) * 0.08 + f_orb * 0.4);
