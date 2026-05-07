@@ -324,10 +324,6 @@ export function createHeroScene(canvas) {
 
   scene.add(laptopGroup);
 
-  // Where the AI orb will "descend into" the laptop (world-space)
-  const laptopScreenCenter = new THREE.Vector3();
-  screen.getWorldPosition(laptopScreenCenter);
-
   // ── Pencils + Pen cup ──
   const PENCIL_COLORS = [0xF4D86E, 0xC8A878, 0xE89B7A, 0x93B5D1, 0xF4D86E, 0xC8A878];
   const pencils = [];
@@ -407,56 +403,9 @@ export function createHeroScene(canvas) {
   cupGroup.scale.setScalar(0); // hidden initially
   scene.add(cupGroup);
 
-  // ── AI Core (icosahedron + AI label) ──
-  const aiOrb = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(0.45, 0),
-    new THREE.MeshStandardMaterial({
-      color: ACCENT, emissive: ACCENT, emissiveIntensity: 0.45,
-      roughness: 0.28, metalness: 0.65, flatShading: true,
-    }),
-  );
-  aiOrb.position.set(0, 0.6, 0);
-  aiOrb.scale.setScalar(0);
-  scene.add(aiOrb);
-
-  function makeAILabelTexture() {
-    const c = document.createElement('canvas');
-    c.width = 384; c.height = 192;
-    const x = c.getContext('2d');
-    x.fillStyle = '#FFFFFF';
-    roundRect(x, 12, 12, 360, 168, 24); x.fill();
-    x.strokeStyle = '#C9A84C'; x.lineWidth = 5;
-    roundRect(x, 12, 12, 360, 168, 24); x.stroke();
-    x.fillStyle = '#C9A84C';
-    roundRect(x, 12, 12, 360, 16, 12); x.fill();
-    x.fillStyle = '#C9A84C';
-    x.font = 'bold 110px "Noto Serif JP", serif';
-    x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText('AI', 192, 110);
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
-    return t;
-  }
-  const aiLabelMat = new THREE.MeshBasicMaterial({
-    map: makeAILabelTexture(), transparent: true, opacity: 0,
-    side: THREE.DoubleSide, depthWrite: false,
-  });
-  const aiLabel = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.5), aiLabelMat);
-  aiLabel.position.set(0, 1.55, 0);
-  aiLabel.scale.setScalar(0);
-  scene.add(aiLabel);
-
-  const haloMat = new THREE.MeshBasicMaterial({
-    color: ACCENT, transparent: true, opacity: 0, side: THREE.DoubleSide,
-  });
-  const halo = new THREE.Mesh(new THREE.RingGeometry(0.6, 1.6, 64), haloMat);
-  halo.rotation.x = -Math.PI / 2;
-  halo.position.set(0, 0.005, 0);
-  scene.add(halo);
-
-  const orbLight = new THREE.PointLight(ACCENT, 0, 14);
-  orbLight.position.set(0, 0.7, 0);
-  scene.add(orbLight);
+  // (AI core / "AI" label / center halo intentionally omitted —
+  //  the items organize themselves; the laptop screen lighting up at the
+  //  end is the only explicit AI signifier.)
 
   // ── Compute target positions for each item (organized state) ──
   // Stations on the desk (x, z coords; y derived from item depth/stack)
@@ -564,12 +513,8 @@ export function createHeroScene(canvas) {
     const t = clock.getElapsedTime();
     const p = progress;
 
-    const f_orb        = smoothstep(0.25, 0.45, p);
-    const f_orbFade    = smoothstep(0.85, 1.00, p);
-    const f_cup        = smoothstep(0.40, 0.55, p);
-    const f_orbActive  = f_orb * (1 - f_orbFade);
-    const f_orbDescend = smoothstep(0.82, 0.97, p);   // glide into laptop screen
-    const f_screenOn   = smoothstep(0.88, 1.00, p);   // screen lights up
+    const f_cup      = smoothstep(0.40, 0.55, p);
+    const f_screenOn = smoothstep(0.88, 1.00, p); // laptop screen lights up
 
     // ── Items: lerp from base → organized target during organize phase ──
     const ORGANIZE_START = 0.30;
@@ -625,37 +570,6 @@ export function createHeroScene(canvas) {
     const cupScale = easeOutCubic(f_cup);
     cupGroup.scale.setScalar(cupScale);
 
-    // ── AI Core: appears in Act 2, glides into laptop screen, fades ──
-    const orbBase = f_orbActive;
-    const orbPulse = 1 + Math.sin(t * 2.2) * 0.06;
-    aiOrb.scale.setScalar(orbBase * orbPulse);
-    aiOrb.rotation.x = t * 0.35;
-    aiOrb.rotation.y = t * 0.25;
-    aiOrb.material.emissiveIntensity = 0.5 + Math.sin(t * 2) * 0.2;
-
-    // Move orb from center → into laptop screen as Act 3 progresses
-    const startX = 0, startY = 0.6, startZ = 0;
-    const endX = laptopScreenCenter.x;
-    const endY = laptopScreenCenter.y;
-    const endZ = laptopScreenCenter.z + 0.05;
-    aiOrb.position.x = startX + (endX - startX) * f_orbDescend;
-    aiOrb.position.y = startY + (endY - startY) * f_orbDescend;
-    aiOrb.position.z = startZ + (endZ - startZ) * f_orbDescend;
-
-    // AI label rises and fades with orb
-    aiLabel.scale.setScalar(orbBase * (1 - f_orbDescend * 0.5));
-    aiLabel.material.opacity = orbBase * (1 - f_orbDescend);
-    aiLabel.position.x = aiOrb.position.x;
-    aiLabel.position.y = aiOrb.position.y + 0.95 + Math.sin(t * 1.2) * 0.04;
-    aiLabel.position.z = aiOrb.position.z;
-    aiLabel.lookAt(camera.position);
-
-    haloMat.opacity = 0.45 * orbBase * (1 - f_orbDescend);
-    halo.scale.setScalar(1 + Math.sin(t * 1.5) * 0.08 + f_orbActive * 0.4);
-
-    orbLight.intensity = orbBase * 2.2;
-    orbLight.position.copy(aiOrb.position);
-
     // ── Laptop screen turns on in Act 3 ──
     const screenPulse = 1 + Math.sin(t * 2.5) * 0.05;
     screenMat.emissiveIntensity = f_screenOn * 1.6 * screenPulse;
@@ -667,7 +581,7 @@ export function createHeroScene(canvas) {
     mouseY += (targetMouseY - mouseY) * 0.05;
     camera.position.x = 2.8 + mouseX * 0.5;
     camera.position.y = 5.0 - mouseY * 0.3;
-    camera.position.z = 9 - f_orb * 0.4;
+    camera.position.z = 9 - f_screenOn * 0.4;
     camera.lookAt(0, 0.5, 0);
 
     renderer.render(scene, camera);
