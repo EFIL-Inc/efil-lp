@@ -45,7 +45,21 @@ if (laptopSection && laptopCanvas) {
   if (textPanels[0]) textPanels[0].classList.add('is-active');
   if (dots[0]) dots[0].classList.add('is-active');
 
-  if (!prefersReducedMotion) {
+  // Pinned scroll-driven flow only on lg+ (desktop). Smaller viewports show
+  // a tap-to-cycle compact layout instead.
+  const lgQuery = window.matchMedia('(min-width: 1024px)');
+
+  function setActive(idx) {
+    laptop.setProgress(idx / N);
+    textPanels.forEach((panel, i) => {
+      panel.classList.toggle('is-active', i === idx);
+    });
+    dots.forEach((d, i) => {
+      d.classList.toggle('is-active', i === idx);
+    });
+  }
+
+  if (!prefersReducedMotion && lgQuery.matches) {
     ScrollTrigger.create({
       trigger: laptopSection,
       start: 'top top',
@@ -57,22 +71,32 @@ if (laptopSection && laptopCanvas) {
       invalidateOnRefresh: true,
       onUpdate: (self) => {
         const p = self.progress;
-        // Each segment is 1/N of progress
         const idx = Math.min(N - 1, Math.floor(p * N));
-
-        // Update laptop screen content
         laptop.setProgress(p);
-
-        // Update active text panel
         textPanels.forEach((panel, i) => {
           panel.classList.toggle('is-active', i === idx);
         });
-        // Update progress dots
         dots.forEach((d, i) => {
           d.classList.toggle('is-active', i === idx);
         });
       },
     });
+  } else {
+    // Mobile / reduced-motion: cycle through use cases on dot tap
+    let mobileIdx = 0;
+    const cycle = () => {
+      mobileIdx = (mobileIdx + 1) % N;
+      setActive(mobileIdx);
+    };
+    dots.forEach((d, i) => {
+      d.style.cursor = 'pointer';
+      d.style.pointerEvents = 'auto';
+      d.addEventListener('click', () => setActive(i));
+    });
+    if (!prefersReducedMotion) {
+      // Auto-advance every 4s on mobile
+      setInterval(cycle, 4000);
+    }
   }
 }
 

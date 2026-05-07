@@ -78,50 +78,22 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- STATS BANNER (between Hero and Use Cases)                    -->
-<!-- ============================================================ -->
-<section class="relative bg-white border-y border-line-200 py-16 md:py-24 overflow-hidden">
-  <div class="container-wide">
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-10 items-end fade-in">
-      <div class="md:col-span-5">
-        <span class="label-eyebrow">By the Numbers</span>
-        <p class="mt-5 font-serif text-2xl md:text-3xl text-ink-900 tracking-tightest leading-tight">
-          AIを"仕組み"にした<br>企業が取り戻している、<br>
-          <span class="text-gold-700">経営者の自由時間。</span>
-        </p>
-        <p class="mt-6 text-small text-ink-500">
-          ※想定値。導入規模・業務範囲により異なります。
-        </p>
-      </div>
-      <div class="md:col-span-7 flex items-baseline justify-end gap-3 md:gap-5">
-        <span class="stat-mega" style="font-size: clamp(120px, 18vw, 260px);">100</span>
-        <div class="pb-4 md:pb-8">
-          <span class="block font-serif font-bold text-ink-900 text-3xl md:text-5xl tracking-tightest">時間</span>
-          <span class="block text-label uppercase tracking-label text-ink-500 mt-2">/ month</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================ -->
 <!-- 02. USE CASES — Section header (preamble)                    -->
 <!-- ============================================================ -->
-<section id="usecases" class="py-24 md:py-32 bg-cream-50">
+<section id="usecases" class="py-14 md:py-20 bg-cream-50">
   <div class="container-wide">
     <div class="max-w-3xl fade-in">
       <span class="label-eyebrow">01 &nbsp;What's Possible</span>
-      <span class="rule-gold mt-6 mb-10"></span>
+      <span class="rule-gold mt-6 mb-8"></span>
       <h2 class="font-serif font-bold text-ink-900 tracking-tightest leading-tight"
-          style="font-size: clamp(36px, 5vw, 60px);">
+          style="font-size: clamp(34px, 4.5vw, 54px);">
         こんなこと、もう<br>
         AIで <span class="text-gold-700">当たり前</span> です。
       </h2>
-      <p class="mt-8 text-body text-ink-700 max-w-xl">
+      <p class="mt-6 text-body text-ink-700 max-w-xl">
         特別なスキルも、長期プロジェクトも要りません。<br>
         スクロールに合わせて、7つの業務が次々と現れます。
       </p>
-      <p class="mt-6 text-small text-ink-500">↓ Scroll to flip through</p>
     </div>
   </div>
 </section>
@@ -129,17 +101,17 @@
 <!-- ============================================================ -->
 <!-- 02b. USE CASES — Laptop + Scroll-driven screen swap          -->
 <!-- ============================================================ -->
-<section id="laptop-section" class="relative h-screen overflow-hidden bg-cream-50">
-  <div class="container-wide h-full">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full items-center pt-20 pb-10 lg:pt-0 lg:pb-0">
+<section id="laptop-section" class="relative lg:h-screen overflow-hidden bg-cream-50 py-10 lg:py-0">
+  <div class="container-wide lg:h-full">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 lg:h-full lg:items-center">
 
       <!-- Left: 3D laptop -->
-      <div class="lg:col-span-7 relative">
-        <canvas id="laptop-canvas" class="block w-full" style="aspect-ratio: 4 / 3; max-height: 80vh;" aria-label="3Dラップトップ画面でAIユースケースが切り替わるアニメーション"></canvas>
+      <div class="lg:col-span-7 relative order-2 lg:order-1">
+        <canvas id="laptop-canvas" class="block w-full" style="aspect-ratio: 4 / 3; max-height: 70vh;" aria-label="3Dラップトップ画面でAIユースケースが切り替わるアニメーション"></canvas>
       </div>
 
       <!-- Right: Text panels (stack with crossfade) -->
-      <div class="lg:col-span-5 relative" style="min-height: 56vh;">
+      <div class="lg:col-span-5 relative order-1 lg:order-2 min-h-[280px] lg:min-h-[56vh]">
         <div class="laptop-text" data-index="0">
           <span class="label-eyebrow">Use Case 01 / 07</span>
           <h3 class="mt-5 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
@@ -332,8 +304,8 @@
 
       <div class="fade-in border-t border-line-700 pt-8">
         <span class="label-eyebrow text-gold-500">採用工数</span>
-        <p class="mt-6 font-serif font-bold text-white tracking-tightest leading-none flex items-baseline">
-          <span style="font-size: clamp(96px, 13vw, 200px);">-80</span>
+        <p class="mt-6 font-serif font-bold text-white tracking-tightest leading-none flex items-baseline whitespace-nowrap">
+          <span style="font-size: clamp(88px, 12vw, 176px);">-80</span>
           <span class="text-3xl md:text-5xl text-gold-500 ml-2">%</span>
         </p>
         <p class="mt-6 text-body text-ink-300">
@@ -344,10 +316,9 @@
 
       <div class="fade-in delay-1 border-t border-line-700 pt-8">
         <span class="label-eyebrow text-gold-500">月間コスト</span>
-        <p class="mt-6 font-serif font-bold text-white tracking-tightest leading-none flex items-baseline">
-          <span class="text-3xl md:text-5xl text-gold-500 mr-1">-</span>
-          <span style="font-size: clamp(80px, 11vw, 160px);">30</span>
-          <span class="text-2xl md:text-4xl text-ink-300 ml-2">万円</span>
+        <p class="mt-6 font-serif font-bold text-white tracking-tightest leading-none flex items-baseline whitespace-nowrap">
+          <span style="font-size: clamp(88px, 12vw, 176px);">-30</span>
+          <span class="text-3xl md:text-5xl text-gold-500 ml-2">万円</span>
         </p>
         <p class="mt-6 text-body text-ink-300">
           外注していた事務・分析・資料作成を内製化。
@@ -357,10 +328,9 @@
 
       <div class="fade-in delay-2 border-t border-line-700 pt-8">
         <span class="label-eyebrow text-gold-500">経営者の自由時間</span>
-        <p class="mt-6 font-serif font-bold text-white tracking-tightest leading-none flex items-baseline">
-          <span class="text-3xl md:text-5xl text-gold-500 mr-1">+</span>
-          <span style="font-size: clamp(96px, 13vw, 200px);">100</span>
-          <span class="text-2xl md:text-4xl text-ink-300 ml-2">h/月</span>
+        <p class="mt-6 font-serif font-bold text-white tracking-tightest leading-none flex items-baseline whitespace-nowrap">
+          <span style="font-size: clamp(88px, 12vw, 176px);">+100</span>
+          <span class="text-3xl md:text-5xl text-gold-500 ml-2">h/月</span>
         </p>
         <p class="mt-6 text-body text-ink-300">
           日常業務を仕組み化することで、
