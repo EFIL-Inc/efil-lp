@@ -216,6 +216,118 @@ export function createHeroScene(canvas) {
     }
   });
 
+  // ── Laptop on desk (center-back; screen turns on at the end) ──
+  const laptopGroup = new THREE.Group();
+  laptopGroup.position.set(0, 0, -2.2);
+
+  const aluminumMat = new THREE.MeshStandardMaterial({
+    color: 0xC8C4BA, metalness: 0.6, roughness: 0.35,
+  });
+
+  // Body (base)
+  const lpBody = new THREE.Mesh(
+    new THREE.BoxGeometry(1.9, 0.07, 1.25),
+    aluminumMat,
+  );
+  lpBody.position.y = 0.035;
+  laptopGroup.add(lpBody);
+
+  // Trackpad
+  const trackpad = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.65, 0.45),
+    new THREE.MeshStandardMaterial({ color: 0xB5B0A4, metalness: 0.4, roughness: 0.55 }),
+  );
+  trackpad.rotation.x = -Math.PI / 2;
+  trackpad.position.set(0, 0.072, 0.25);
+  laptopGroup.add(trackpad);
+
+  // Lid (screen back)
+  const lidTilt = -0.16;
+  const lid = new THREE.Mesh(
+    new THREE.BoxGeometry(1.9, 1.18, 0.04),
+    aluminumMat,
+  );
+  lid.position.set(0, 0.62, -0.6);
+  lid.rotation.x = lidTilt;
+  laptopGroup.add(lid);
+
+  // Screen content (off state baked into the texture; emissive lights it up)
+  function makeLaptopScreenTexture() {
+    const c = document.createElement('canvas');
+    c.width = 1024; c.height = 640;
+    const x = c.getContext('2d');
+    // Dark background
+    x.fillStyle = '#0A1426';
+    x.fillRect(0, 0, 1024, 640);
+    // Top status bar
+    x.fillStyle = '#1B2A4A';
+    x.fillRect(0, 0, 1024, 44);
+    x.fillStyle = '#C9A84C';
+    x.beginPath(); x.arc(28, 22, 7, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#FFFFFF';
+    x.font = 'bold 18px sans-serif'; x.textAlign = 'left';
+    x.fillText('EFIL · AI Active', 50, 28);
+    // Big "AI" mark
+    x.fillStyle = '#C9A84C';
+    x.font = 'bold 220px "Noto Serif JP", serif';
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText('AI', 512, 320);
+    // Subtle outer ring
+    x.strokeStyle = 'rgba(201, 168, 76, 0.45)'; x.lineWidth = 5;
+    x.beginPath(); x.arc(512, 320, 230, 0, Math.PI * 2); x.stroke();
+    x.strokeStyle = 'rgba(201, 168, 76, 0.2)'; x.lineWidth = 3;
+    x.beginPath(); x.arc(512, 320, 270, 0, Math.PI * 2); x.stroke();
+    // Bottom bar
+    x.fillStyle = '#1B2A4A';
+    x.fillRect(0, 596, 1024, 44);
+    x.fillStyle = '#C9A84C';
+    x.font = 'bold 16px "Noto Sans JP", sans-serif'; x.textAlign = 'left';
+    x.fillText('● 業務を仕組み化中', 24, 624);
+    x.textAlign = 'right';
+    x.fillStyle = '#A8B2C8';
+    x.fillText('AI Native Mode', 1000, 624);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    return t;
+  }
+
+  const screenTex = makeLaptopScreenTexture();
+  const screenMat = new THREE.MeshStandardMaterial({
+    map: screenTex,
+    emissive: 0xFFFFFF,
+    emissiveMap: screenTex,
+    emissiveIntensity: 0, // off initially
+    toneMapped: false,
+  });
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.78, 1.08), screenMat);
+  screen.position.copy(lid.position);
+  // Push slightly forward along the lid's tilt normal
+  const screenNormal = new THREE.Vector3(0, Math.sin(-lidTilt), Math.cos(-lidTilt));
+  screen.position.add(screenNormal.clone().multiplyScalar(0.025));
+  screen.rotation.x = lidTilt;
+  laptopGroup.add(screen);
+
+  // Soft glow halo behind the screen (gold)
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: 0xC9A84C, transparent: true, opacity: 0,
+  });
+  const screenGlow = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.8), glowMat);
+  screenGlow.position.copy(lid.position);
+  screenGlow.position.add(screenNormal.clone().multiplyScalar(-0.12));
+  screenGlow.rotation.x = lidTilt;
+  laptopGroup.add(screenGlow);
+
+  // Light that emits from the screen when active
+  const screenLight = new THREE.PointLight(0xC9A84C, 0, 8);
+  screenLight.position.set(0, 0.7, -0.4);
+  laptopGroup.add(screenLight);
+
+  scene.add(laptopGroup);
+
+  // Where the AI orb will "descend into" the laptop (world-space)
+  const laptopScreenCenter = new THREE.Vector3();
+  screen.getWorldPosition(laptopScreenCenter);
+
   // ── Pencils + Pen cup ──
   const PENCIL_COLORS = [0xF4D86E, 0xC8A878, 0xE89B7A, 0x93B5D1, 0xF4D86E, 0xC8A878];
   const pencils = [];
@@ -349,11 +461,11 @@ export function createHeroScene(canvas) {
   // ── Compute target positions for each item (organized state) ──
   // Stations on the desk (x, z coords; y derived from item depth/stack)
   const STATION = {
-    docStack:    { x: -3.8, z:  1.5, baseY: 0.02 },
-    mailStack:   { x: -3.8, z: -1.6, baseY: 0.02 },
-    calStand:    { x:  3.6, z: -1.7, baseY: 0.5 },     // calendar stands upright
-    stickyGrid:  { x:  0.0, z:  2.3 },                 // 3-column grid on front center
-    penCup:      { x:  3.2, z:  1.0, baseY: 0.55 },
+    docStack:    { x: -3.8, z:  1.0, baseY: 0.02 },    // front-left
+    mailStack:   { x: -3.0, z: -1.0, baseY: 0.02 },    // mid-left
+    calStand:    { x:  3.6, z: -1.5, baseY: 0.5 },     // back-right (next to laptop)
+    stickyGrid:  { x: -0.2, z:  2.0 },                 // front-center grid
+    penCup:      { x:  3.0, z:  0.6, baseY: 0.55 },    // mid-right
   };
 
   // Group items by type and assign target positions
@@ -452,10 +564,12 @@ export function createHeroScene(canvas) {
     const t = clock.getElapsedTime();
     const p = progress;
 
-    const f_orb     = smoothstep(0.25, 0.45, p);
-    const f_orbFade = smoothstep(0.85, 1.00, p);
-    const f_cup     = smoothstep(0.40, 0.55, p);
-    const f_orbActive = f_orb * (1 - f_orbFade);
+    const f_orb        = smoothstep(0.25, 0.45, p);
+    const f_orbFade    = smoothstep(0.85, 1.00, p);
+    const f_cup        = smoothstep(0.40, 0.55, p);
+    const f_orbActive  = f_orb * (1 - f_orbFade);
+    const f_orbDescend = smoothstep(0.82, 0.97, p);   // glide into laptop screen
+    const f_screenOn   = smoothstep(0.88, 1.00, p);   // screen lights up
 
     // ── Items: lerp from base → organized target during organize phase ──
     const ORGANIZE_START = 0.30;
@@ -511,7 +625,7 @@ export function createHeroScene(canvas) {
     const cupScale = easeOutCubic(f_cup);
     cupGroup.scale.setScalar(cupScale);
 
-    // ── AI Core: appears in Act 2, fades in Act 3 ──
+    // ── AI Core: appears in Act 2, glides into laptop screen, fades ──
     const orbBase = f_orbActive;
     const orbPulse = 1 + Math.sin(t * 2.2) * 0.06;
     aiOrb.scale.setScalar(orbBase * orbPulse);
@@ -519,15 +633,34 @@ export function createHeroScene(canvas) {
     aiOrb.rotation.y = t * 0.25;
     aiOrb.material.emissiveIntensity = 0.5 + Math.sin(t * 2) * 0.2;
 
-    aiLabel.scale.setScalar(orbBase);
-    aiLabel.material.opacity = orbBase;
-    aiLabel.position.y = 1.55 + Math.sin(t * 1.2) * 0.04;
+    // Move orb from center → into laptop screen as Act 3 progresses
+    const startX = 0, startY = 0.6, startZ = 0;
+    const endX = laptopScreenCenter.x;
+    const endY = laptopScreenCenter.y;
+    const endZ = laptopScreenCenter.z + 0.05;
+    aiOrb.position.x = startX + (endX - startX) * f_orbDescend;
+    aiOrb.position.y = startY + (endY - startY) * f_orbDescend;
+    aiOrb.position.z = startZ + (endZ - startZ) * f_orbDescend;
+
+    // AI label rises and fades with orb
+    aiLabel.scale.setScalar(orbBase * (1 - f_orbDescend * 0.5));
+    aiLabel.material.opacity = orbBase * (1 - f_orbDescend);
+    aiLabel.position.x = aiOrb.position.x;
+    aiLabel.position.y = aiOrb.position.y + 0.95 + Math.sin(t * 1.2) * 0.04;
+    aiLabel.position.z = aiOrb.position.z;
     aiLabel.lookAt(camera.position);
 
-    haloMat.opacity = 0.45 * orbBase;
+    haloMat.opacity = 0.45 * orbBase * (1 - f_orbDescend);
     halo.scale.setScalar(1 + Math.sin(t * 1.5) * 0.08 + f_orbActive * 0.4);
 
     orbLight.intensity = orbBase * 2.2;
+    orbLight.position.copy(aiOrb.position);
+
+    // ── Laptop screen turns on in Act 3 ──
+    const screenPulse = 1 + Math.sin(t * 2.5) * 0.05;
+    screenMat.emissiveIntensity = f_screenOn * 1.6 * screenPulse;
+    screenLight.intensity = f_screenOn * 1.4;
+    glowMat.opacity = f_screenOn * 0.28 * screenPulse;
 
     // ── Camera ──
     mouseX += (targetMouseX - mouseX) * 0.05;
