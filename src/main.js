@@ -30,27 +30,20 @@ const fadeObserver = new IntersectionObserver(
 );
 document.querySelectorAll('.fade-in').forEach((el) => fadeObserver.observe(el));
 
-// ── Laptop section: pin + scroll-driven screen swap + text crossfade ──
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const laptopSection = document.querySelector('#laptop-section');
-const laptopCanvas = document.getElementById('laptop-canvas');
+const lgQuery = window.matchMedia('(min-width: 1024px)');
 
-if (laptopSection && laptopCanvas) {
-  const laptop = createLaptopScene(laptopCanvas);
-  const textPanels = laptopSection.querySelectorAll('.laptop-text');
-  const dots = laptopSection.querySelectorAll('.laptop-dot');
-  const N = textPanels.length;
+// ───────────────────────────────────────────────────────────
+// Hero: scroll-driven Genesis scene
+// ───────────────────────────────────────────────────────────
+const heroCanvas = document.querySelector('canvas[data-scene="hero"]');
+const heroSection = document.querySelector('#top');
+let heroScene = null;
 
-  // Initial active panel
-  if (textPanels[0]) textPanels[0].classList.add('is-active');
-  if (dots[0]) dots[0].classList.add('is-active');
+if (heroCanvas) {
+  heroScene = createHeroScene(heroCanvas);
 
-  // Pinned scroll-driven flow only on lg+ (desktop). Smaller viewports show
-  // a tap-to-cycle compact layout instead.
-  const lgQuery = window.matchMedia('(min-width: 1024px)');
-
-  // ── Hero: pinned, scroll drives Genesis animation ──
-  if (heroScene && heroSection && !prefersReducedMotion && lgQuery.matches) {
+  if (heroSection && !prefersReducedMotion && lgQuery.matches) {
     ScrollTrigger.create({
       trigger: heroSection,
       start: 'top top',
@@ -67,10 +60,27 @@ if (laptopSection && laptopCanvas) {
         heroScene.setProgress(self.progress || 0);
       },
     });
-  } else if (heroScene) {
-    // Reduced-motion / mobile: show final network state immediately
+  } else {
+    // Reduced-motion / smaller viewports: show final network state immediately
     heroScene.setProgress(1);
   }
+}
+
+// ───────────────────────────────────────────────────────────
+// Laptop section: pin + scroll-driven screen swap + text crossfade
+// ───────────────────────────────────────────────────────────
+const laptopSection = document.querySelector('#laptop-section');
+const laptopCanvas = document.getElementById('laptop-canvas');
+
+if (laptopSection && laptopCanvas) {
+  const laptop = createLaptopScene(laptopCanvas);
+  const textPanels = laptopSection.querySelectorAll('.laptop-text');
+  const dots = laptopSection.querySelectorAll('.laptop-dot');
+  const N = textPanels.length;
+
+  // Initial active panel
+  if (textPanels[0]) textPanels[0].classList.add('is-active');
+  if (dots[0]) dots[0].classList.add('is-active');
 
   function setActive(idx) {
     laptop.setProgress(idx / N);
@@ -122,12 +132,6 @@ if (laptopSection && laptopCanvas) {
     }
   }
 }
-
-// Hero: scroll-driven Genesis scene
-const heroCanvas = document.querySelector('canvas[data-scene="hero"]');
-const heroSection = document.querySelector('#top');
-let heroScene = null;
-if (heroCanvas) heroScene = createHeroScene(heroCanvas);
 
 // Make sure ScrollTrigger picks up final layout + initial scroll position
 window.addEventListener('load', () => {
