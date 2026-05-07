@@ -78,40 +78,31 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- 02. USE CASES — Section header (preamble)                    -->
+<!-- 02. USE CASES — Heading + Laptop unified (single pinned area)-->
 <!-- ============================================================ -->
-<section id="usecases" class="py-14 md:py-20 bg-cream-50">
-  <div class="container-wide">
-    <div class="max-w-3xl fade-in">
-      <span class="label-eyebrow">01 &nbsp;What's Possible</span>
-      <span class="rule-gold mt-6 mb-8"></span>
-      <h2 class="font-serif font-bold text-ink-900 tracking-tightest leading-tight"
-          style="font-size: clamp(34px, 4.5vw, 54px);">
-        こんなこと、もう<br>
-        AIで <span class="text-gold-700">当たり前</span> です。
-      </h2>
-      <p class="mt-6 text-body text-ink-700 max-w-xl">
-        特別なスキルも、長期プロジェクトも要りません。<br>
-        スクロールに合わせて、7つの業務が次々と現れます。
-      </p>
-    </div>
-  </div>
-</section>
+<section id="laptop-section" class="relative lg:h-screen overflow-hidden bg-cream-50 py-12 lg:py-0">
+  <div class="container-wide lg:h-full flex flex-col lg:justify-center">
 
-<!-- ============================================================ -->
-<!-- 02b. USE CASES — Laptop + Scroll-driven screen swap          -->
-<!-- ============================================================ -->
-<section id="laptop-section" class="relative lg:h-screen overflow-hidden bg-cream-50 py-10 lg:py-0">
-  <div class="container-wide lg:h-full">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 lg:h-full lg:items-center">
+    <!-- Section heading (stays visible during pin) -->
+    <header class="max-w-3xl mb-8 lg:mb-10 fade-in">
+      <span class="label-eyebrow">01 &nbsp;What's Possible</span>
+      <span class="rule-gold mt-4 mb-6"></span>
+      <h2 class="font-serif font-bold text-ink-900 tracking-tightest leading-tight"
+          style="font-size: clamp(28px, 3.6vw, 44px);">
+        こんなこと、もうAIで <span class="text-gold-700">当たり前</span> です。
+      </h2>
+    </header>
+
+    <!-- Laptop + text grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 lg:items-center">
 
       <!-- Left: 3D laptop -->
       <div class="lg:col-span-7 relative order-2 lg:order-1">
-        <canvas id="laptop-canvas" class="block w-full" style="aspect-ratio: 4 / 3; max-height: 70vh;" aria-label="3Dラップトップ画面でAIユースケースが切り替わるアニメーション"></canvas>
+        <canvas id="laptop-canvas" class="block w-full" style="aspect-ratio: 4 / 3; max-height: 60vh;" aria-label="3Dラップトップ画面でAIユースケースが切り替わるアニメーション"></canvas>
       </div>
 
       <!-- Right: Text panels (stack with crossfade) -->
-      <div class="lg:col-span-5 relative order-1 lg:order-2 min-h-[280px] lg:min-h-[56vh]">
+      <div class="lg:col-span-5 relative order-1 lg:order-2 min-h-[260px] lg:min-h-[44vh]">
         <div class="laptop-text" data-index="0">
           <span class="label-eyebrow">Use Case 01 / 07</span>
           <h3 class="mt-5 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
