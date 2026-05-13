@@ -56,6 +56,61 @@ export function createHeroScene(canvas) {
   grid.material.transparent = true;
   scene.add(grid);
 
+  // ── Atmospheric particle field (depth + life in background) ──
+  const ATM_COUNT = 1800;
+  const atmPositions = new Float32Array(ATM_COUNT * 3);
+  const atmColors = new Float32Array(ATM_COUNT * 3);
+  const atmSeeds = new Float32Array(ATM_COUNT);
+  const goldC = new THREE.Color(0xC9A84C);
+  const dimC = new THREE.Color(0xA8B2C8);
+  const lightC = new THREE.Color(0xC8C2B5);
+  for (let i = 0; i < ATM_COUNT; i++) {
+    // Spread across a wide volume around the chart
+    const x = (Math.random() - 0.5) * 30;
+    const y = Math.random() * 12 - 1;
+    const z = (Math.random() - 0.5) * 16 - 2;
+    atmPositions[i * 3] = x;
+    atmPositions[i * 3 + 1] = y;
+    atmPositions[i * 3 + 2] = z;
+    const c = Math.random() < 0.3 ? goldC : (Math.random() < 0.5 ? lightC : dimC);
+    atmColors[i * 3] = c.r;
+    atmColors[i * 3 + 1] = c.g;
+    atmColors[i * 3 + 2] = c.b;
+    atmSeeds[i] = Math.random() * Math.PI * 2;
+  }
+  const atmGeo = new THREE.BufferGeometry();
+  atmGeo.setAttribute('position', new THREE.BufferAttribute(atmPositions, 3));
+  atmGeo.setAttribute('color', new THREE.BufferAttribute(atmColors, 3));
+  const atmMat = new THREE.PointsMaterial({
+    size: 0.05,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.6,
+    sizeAttenuation: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const atmPoints = new THREE.Points(atmGeo, atmMat);
+  scene.add(atmPoints);
+
+  // ── Pulsing rings at origin (energy core feel) ──
+  const originRings = [];
+  for (let i = 0; i < 3; i++) {
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.4 + i * 0.3, 0.5 + i * 0.3, 64),
+      new THREE.MeshBasicMaterial({
+        color: ACCENT,
+        transparent: true,
+        opacity: 0,
+        side: THREE.DoubleSide,
+      }),
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(-7, 0.02, 0);
+    scene.add(ring);
+    originRings.push(ring);
+  }
+
   // ── Axes (subtle) ──
   const axisMat = new THREE.LineBasicMaterial({
     color: 0xC8BFA4, transparent: true, opacity: 0.5,
@@ -146,6 +201,68 @@ export function createHeroScene(canvas) {
     line.mesh.geometry.setDrawRange(0, 0);
     line.config = cfg;
     scene.add(line.mesh);
+
+    // Outer glow halo (larger transparent tube around the main line)
+    const haloCurve = new THREE.CatmullRomCurve3(cfg.controlPoints, false, 'centripetal');
+    const haloGeo = new THREE.TubeGeometry(haloCurve, 220, 0.22, 12, false);
+    const haloMat = new THREE.MeshBasicMaterial({
+      color: cfg.color,
+      transparent: true,
+      opacity: 0.18,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+    haloMesh.geometry.setDrawRange(0, 0);
+    scene.add(haloMesh);
+    line.halo = haloMesh;
+    line.haloGeo = haloGeo;
+
+    // Vertical pillar of light at peak (rises when line reaches it)
+    const peakEnd = cfg.controlPoints[cfg.controlPoints.length - 1];
+    const pillarGeo = new THREE.CylinderGeometry(0.035, 0.05, 1, 12, 1, true);
+    const pillarMat = new THREE.MeshBasicMaterial({
+      color: cfg.color,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+    pillar.position.set(peakEnd.x, peakEnd.y / 2, peakEnd.z);
+    pillar.scale.y = peakEnd.y; // height = peak y
+    scene.add(pillar);
+    line.pillar = pillar;
+    line.pillarMat = pillarMat;
+    line.peakEnd = peakEnd;
+
+    // Burst sparks at peak (fires once when line reaches end)
+    const SPARK = 32;
+    const sparkPos = new Float32Array(SPARK * 3);
+    const sparkLife = new Float32Array(SPARK);
+    const sparkVel = new Float32Array(SPARK * 3);
+    for (let i = 0; i < SPARK; i++) {
+      sparkPos[i * 3] = peakEnd.x;
+      sparkPos[i * 3 + 1] = peakEnd.y;
+      sparkPos[i * 3 + 2] = peakEnd.z;
+      sparkLife[i] = -1;
+    }
+    const sparkGeo = new THREE.BufferGeometry();
+    sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
+    const sparkMat = new THREE.PointsMaterial({
+      color: cfg.color,
+      size: 0.16,
+      transparent: true,
+      opacity: 0.9,
+      sizeAttenuation: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const sparkPts = new THREE.Points(sparkGeo, sparkMat);
+    scene.add(sparkPts);
+    line.spark = { pts: sparkPts, geo: sparkGeo, positions: sparkPos, life: sparkLife, vel: sparkVel, fired: false, mat: sparkMat };
+
     return line;
   });
 
@@ -269,7 +386,19 @@ export function createHeroScene(canvas) {
     const f_drawEnd   = 0.85;
     const f_label     = smoothstep(0.82, 1.00, p);
 
-    // Update each line
+    // Atmospheric particles slow drift
+    atmPoints.rotation.y = t * 0.015;
+    atmMat.opacity = 0.45 + Math.sin(t * 0.6) * 0.1;
+
+    // Origin pulsing rings
+    originRings.forEach((ring, i) => {
+      const phase = (t * 0.6 - i * 0.3) % 1.5;
+      const grow = phase / 1.5;
+      ring.scale.setScalar(1 + grow * 2.2);
+      ring.material.opacity = (1 - grow) * 0.45;
+    });
+
+    // Update each line + halo + pillar + sparks
     lines.forEach((line, i) => {
       // Stagger: line 1 starts first, line 3 last
       const myStart = f_drawStart + i * 0.06;
@@ -280,10 +409,66 @@ export function createHeroScene(canvas) {
       const drawCount = Math.floor(line.totalIndex * eased);
       line.geo.setDrawRange(0, drawCount);
 
-      // Emissive pulse during active drawing
+      // Halo follows line drawing (slight lag for organic feel)
+      const haloProgress = Math.min(1, eased * 1.05);
+      const haloDrawCount = Math.floor(line.haloGeo.index.count * haloProgress);
+      line.haloGeo.setDrawRange(0, haloDrawCount);
       const isActive = drawProgress > 0 && drawProgress < 1;
       const pulse = isActive ? (1 + Math.sin(t * 4) * 0.15) : 1;
       line.mesh.material.emissiveIntensity = 0.5 * pulse + (f_label * 0.3);
+      line.halo.material.opacity = 0.18 * (1 + Math.sin(t * 2 + i) * 0.2);
+
+      // Pillar at peak — rises when line reaches the end
+      const pillarT = Math.max(0, Math.min(1, (drawProgress - 0.85) / 0.15));
+      const pillarPulse = 0.7 + Math.sin(t * 3 + i * 0.5) * 0.3;
+      line.pillarMat.opacity = pillarT * 0.5 * pillarPulse;
+      // Pillar grows from base to peak height
+      const peakY = line.peakEnd.y;
+      const pillarHeight = peakY * easeOutCubic(pillarT);
+      line.pillar.scale.y = pillarHeight;
+      line.pillar.position.y = pillarHeight / 2;
+
+      // Burst sparks: fire once when line reaches end
+      const spark = line.spark;
+      if (drawProgress >= 1 && !spark.fired) {
+        spark.fired = true;
+        for (let k = 0; k < spark.life.length; k++) {
+          spark.life[k] = 1.0;
+          // Random outward velocity
+          const a = Math.random() * Math.PI * 2;
+          const b = (Math.random() - 0.3) * Math.PI;
+          const speed = 1.5 + Math.random() * 1.5;
+          spark.vel[k * 3]     = Math.cos(a) * Math.cos(b) * speed;
+          spark.vel[k * 3 + 1] = Math.sin(b) * speed + 0.5; // bias upward
+          spark.vel[k * 3 + 2] = Math.sin(a) * Math.cos(b) * speed;
+          // Reset position to peak
+          spark.positions[k * 3]     = line.peakEnd.x;
+          spark.positions[k * 3 + 1] = line.peakEnd.y;
+          spark.positions[k * 3 + 2] = line.peakEnd.z;
+        }
+      } else if (drawProgress < 0.95 && spark.fired) {
+        // Reset for re-trigger when scrolling back
+        spark.fired = false;
+      }
+
+      // Update spark positions / lifetimes
+      let anyAlive = false;
+      for (let k = 0; k < spark.life.length; k++) {
+        if (spark.life[k] < 0) continue;
+        anyAlive = true;
+        spark.life[k] -= dt * 0.8;
+        if (spark.life[k] < 0) {
+          spark.positions[k * 3 + 1] = -100;
+          continue;
+        }
+        spark.positions[k * 3]     += spark.vel[k * 3] * dt;
+        spark.positions[k * 3 + 1] += spark.vel[k * 3 + 1] * dt;
+        spark.positions[k * 3 + 2] += spark.vel[k * 3 + 2] * dt;
+        // Gravity
+        spark.vel[k * 3 + 1] -= dt * 1.5;
+      }
+      spark.geo.attributes.position.needsUpdate = true;
+      spark.mat.opacity = anyAlive ? 0.85 : 0;
     });
 
     // Particles flow along each line (only show where line is drawn)
