@@ -5,7 +5,11 @@
       "Bash(gh auth:*)",
       "Bash(gh repo:*)",
       "Bash(git -c user.email=\"tsutsumaru.t@efil.co.jp\" -c user.name=\"Taiga Tsutsumaru\" commit -m \"Add Microsoft Clarity tracking script\")",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "mcp__Blender__get_blendfile_summary_path_info",
+      "mcp__Blender__get_objects_summary",
+      "mcp__Blender__render_viewport_to_path",
+      "mcp__Blender__execute_blender_code"
     ]
   }
 }

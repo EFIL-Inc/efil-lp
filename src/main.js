@@ -1,5 +1,4 @@
 import './styles/main.css';
-import { createHeroScene } from './three/hero-scene.js';
 import { createLaptopScene } from './three/laptop-scene.js';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
@@ -34,37 +33,8 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
 const lgQuery = window.matchMedia('(min-width: 1024px)');
 
 // ───────────────────────────────────────────────────────────
-// Hero: scroll-driven Genesis scene
+// Hero: typography-only — no 3D scene, no ScrollTrigger pin
 // ───────────────────────────────────────────────────────────
-const heroCanvas = document.querySelector('canvas[data-scene="hero"]');
-const heroSection = document.querySelector('#top');
-let heroScene = null;
-
-if (heroCanvas) {
-  heroScene = createHeroScene(heroCanvas);
-
-  if (heroSection && !prefersReducedMotion && lgQuery.matches) {
-    ScrollTrigger.create({
-      trigger: heroSection,
-      start: 'top top',
-      end: () => '+=' + (window.innerHeight * 2),
-      pin: true,
-      pinSpacing: true,
-      scrub: 0.6,
-      anticipatePin: 1,
-      invalidateOnRefresh: true,
-      onUpdate: (self) => {
-        heroScene.setProgress(self.progress);
-      },
-      onRefresh: (self) => {
-        heroScene.setProgress(self.progress || 0);
-      },
-    });
-  } else {
-    // Reduced-motion / smaller viewports: show final network state immediately
-    heroScene.setProgress(1);
-  }
-}
 
 // ───────────────────────────────────────────────────────────
 // Laptop section: pin + scroll-driven screen swap + text crossfade

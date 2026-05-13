@@ -40,40 +40,53 @@
 <!-- ============================================================ -->
 <!-- 01. HERO  (Bright office + Three.js)                         -->
 <!-- ============================================================ -->
-<section id="top" class="relative h-screen overflow-hidden bg-cream-50">
+<section id="top" class="relative min-h-screen overflow-hidden bg-cream-50">
 
-  <canvas data-scene="hero"
-          class="absolute inset-0 w-full h-full z-0"
-          aria-hidden="true"></canvas>
+  <!-- Subtle animated gradient backdrop (no 3D) -->
+  <div class="hero-aurora absolute inset-0 z-0 pointer-events-none" aria-hidden="true"></div>
 
-  <div class="absolute inset-0 z-10 pointer-events-none"
-       style="background: radial-gradient(ellipse at 30% 50%, rgba(250,247,242,0.85) 0%, rgba(250,247,242,0.4) 50%, rgba(250,247,242,0) 100%);"></div>
+  <!-- Decorative gold rule on the right edge -->
+  <div class="hidden lg:block absolute top-1/2 right-10 -translate-y-1/2 z-10 pointer-events-none">
+    <span class="block w-px h-32 bg-gold-700/40"></span>
+    <span class="block mt-4 text-label uppercase tracking-label text-gold-700/70 vertical-label">
+      EFIL · Since 2024
+    </span>
+  </div>
 
-  <div class="container-wide w-full h-full relative z-20 flex items-center pt-24 lg:pt-0">
-    <div class="max-w-4xl">
+  <div class="container-wide w-full min-h-screen relative z-20 flex items-center pt-32 pb-16 lg:pt-24 lg:pb-24">
+    <div class="max-w-5xl">
       <div class="fade-in">
         <span class="label-eyebrow">AI Consulting for Enterprises</span>
-        <span class="rule-gold mt-6 mb-8"></span>
+        <span class="rule-gold mt-6 mb-10"></span>
       </div>
 
-      <h1 class="font-serif font-bold text-ink-900 tracking-tightest leading-[1.2] fade-in delay-1"
-          style="font-size: clamp(44px, 7.5vw, 84px);">
+      <h1 class="font-serif font-bold text-ink-900 tracking-tightest leading-[1.1] fade-in delay-1"
+          style="font-size: clamp(52px, 10vw, 128px);">
         売上の天井は、<br>
         <span class="text-gold-700">人手じゃない。</span>
       </h1>
 
-      <p class="mt-10 font-serif text-xl md:text-2xl text-ink-900 max-w-3xl fade-in delay-2 leading-relaxed">
-        今のチームのまま、<span class="text-gold-700">商談数</span>も、<span class="text-gold-700">受注率</span>も、<span class="text-gold-700">LTV</span>も伸ばす。<br>
+      <p class="mt-12 font-serif text-xl md:text-3xl text-ink-900 max-w-3xl fade-in delay-2 leading-snug tracking-tightest">
+        今のチームのまま、<span class="text-gold-700">商談数</span>も、<span class="text-gold-700">受注率</span>も、<span class="text-gold-700">LTV</span>も伸ばす。
+      </p>
+
+      <p class="mt-6 text-body text-ink-700 max-w-2xl fade-in delay-3 leading-relaxed">
         AI で営業力を増幅する、中小企業のためのコンサルティング。
       </p>
 
-      <div class="mt-12 flex flex-col sm:flex-row items-start gap-4 fade-in delay-3">
+      <div class="mt-14 flex flex-col sm:flex-row items-start gap-5 fade-in delay-4">
         <a href="#contact" class="btn-cta">無料相談を申し込む<span class="arrow">→</span></a>
         <a href="#usecases" class="inline-flex items-center px-2 py-4 text-small text-ink-700 hover:text-gold-700 transition-colors">
           まず "できること" を見る ↓
         </a>
       </div>
     </div>
+  </div>
+
+  <!-- Bottom scroll cue -->
+  <div class="hidden lg:flex absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex-col items-center text-ink-500 pointer-events-none">
+    <span class="text-label uppercase tracking-label">Scroll</span>
+    <span class="block w-px h-12 bg-gold-700/60 mt-3 hero-scroll-line"></span>
   </div>
 </section>
 

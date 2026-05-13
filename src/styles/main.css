@@ -205,12 +205,45 @@
     opacity: 1;
   }
 
+  /* ── Hero subtle background aurora (replaces 3D) ── */
+  .hero-aurora {
+    background:
+      radial-gradient(ellipse 60% 50% at 85% 30%, rgba(201, 168, 76, 0.10) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 15% 80%, rgba(184, 134, 11, 0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 80% 40% at 50% 100%, rgba(232, 226, 213, 0.4) 0%, transparent 60%);
+    animation: hero-aurora-drift 18s ease-in-out infinite alternate;
+  }
+  @keyframes hero-aurora-drift {
+    0%   { background-position: 0% 0%, 0% 0%, 0% 0%; }
+    100% { background-position: -10% 5%, 8% -3%, 0% -2%; }
+  }
+
+  /* Vertical label for editorial side accent */
+  .vertical-label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+
+  /* Pulsing scroll cue line */
+  .hero-scroll-line {
+    animation: hero-scroll-pulse 2.4s ease-in-out infinite;
+    transform-origin: top;
+  }
+  @keyframes hero-scroll-pulse {
+    0%, 100% { transform: scaleY(0.3); opacity: 0.4; }
+    50%      { transform: scaleY(1);   opacity: 1; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .fade-in,
     .flip-card {
       opacity: 1 !important;
       transform: none !important;
       transition: none !important;
+    }
+    .hero-aurora,
+    .hero-scroll-line {
+      animation: none !important;
     }
   }
 }
