@@ -146,15 +146,15 @@
 <!-- ============================================================ -->
 <!-- 02. USE CASES — Heading + Laptop unified (single pinned area)-->
 <!-- ============================================================ -->
-<section id="laptop-section" class="relative lg:h-screen overflow-hidden bg-cream-50 py-12 lg:py-0">
-  <div class="container-wide lg:h-full flex flex-col lg:justify-center">
+<section id="laptop-section" class="relative lg:min-h-screen overflow-hidden bg-cream-50 py-12 lg:py-10">
+  <div class="container-wide flex flex-col lg:justify-center">
 
     <!-- Section heading (stays visible during pin) -->
-    <header class="max-w-3xl mb-8 lg:mb-10 fade-in">
+    <header class="max-w-3xl mb-8 lg:mb-6 fade-in">
       <span class="label-eyebrow">02 &nbsp;What AI Can Do</span>
-      <span class="rule-gold mt-4 mb-6"></span>
+      <span class="rule-gold mt-3 mb-4"></span>
       <h2 class="font-serif font-bold text-ink-900 tracking-tightest leading-tight"
-          style="font-size: clamp(28px, 3.6vw, 44px);">
+          style="font-size: clamp(24px, 2.8vw, 36px);">
         営業活動量を <span class="text-gold-700">爆発的に増やす</span>、AIの7つの使い方。
       </h2>
     </header>
@@ -164,117 +164,117 @@
 
       <!-- Left: 3D laptop -->
       <div class="lg:col-span-7 relative order-2 lg:order-1">
-        <canvas id="laptop-canvas" class="block w-full" style="aspect-ratio: 4 / 3; max-height: 60vh;" aria-label="3Dラップトップ画面でAIユースケースが切り替わるアニメーション"></canvas>
+        <canvas id="laptop-canvas" class="block w-full" style="aspect-ratio: 4 / 3; max-height: 48vh;" aria-label="3Dラップトップ画面でAIユースケースが切り替わるアニメーション"></canvas>
       </div>
 
       <!-- Right: Text panels (stack with crossfade) -->
-      <div class="lg:col-span-5 relative order-1 lg:order-2 min-h-[260px] lg:min-h-[44vh]">
+      <div class="lg:col-span-5 relative order-1 lg:order-2 min-h-[340px] sm:min-h-[300px] lg:min-h-[40vh]">
         <div class="laptop-text" data-index="0">
           <span class="label-eyebrow">Use Case 01 / 07</span>
-          <h3 class="mt-5 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
-              style="font-size: clamp(32px, 4.5vw, 56px);">
+          <h3 class="mt-3 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
+              style="font-size: clamp(28px, 3.4vw, 44px);">
             提案書、<br>10倍量産。
           </h3>
           <p class="mt-6 text-body text-ink-700">
             テーマと顧客情報を伝えるだけで、AIがスライドを自動生成。
             提案できる案件数が桁違いに増え、商談の母数が広がります。
           </p>
-          <div class="mt-10 flex items-baseline gap-5">
+          <div class="mt-6 flex items-baseline gap-5">
             <span class="text-ink-500 line-through text-2xl">30分</span>
             <span class="text-gold-700 text-xl">→</span>
-            <span class="stat-mega" style="font-size: clamp(56px, 8vw, 96px);">3分</span>
+            <span class="stat-mega" style="font-size: clamp(44px, 6vw, 72px);">3分</span>
           </div>
         </div>
 
         <div class="laptop-text" data-index="1">
           <span class="label-eyebrow">Use Case 02 / 07</span>
-          <h3 class="mt-5 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
-              style="font-size: clamp(32px, 4.5vw, 56px);">
+          <h3 class="mt-3 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
+              style="font-size: clamp(28px, 3.4vw, 44px);">
             営業メール、<br>全顧客にパーソナライズ。
           </h3>
           <p class="mt-6 text-body text-ink-700">
             顧客ごとの状況・履歴を学習したAIが、一人ひとりに最適な営業メールを下書き。
             接触頻度を上げ、商談化までの距離を縮めます。
           </p>
-          <div class="mt-10 flex items-baseline gap-5">
+          <div class="mt-6 flex items-baseline gap-5">
             <span class="text-ink-500 line-through text-2xl">1通5分</span>
             <span class="text-gold-700 text-xl">→</span>
-            <span class="stat-mega" style="font-size: clamp(56px, 8vw, 96px);">30秒</span>
+            <span class="stat-mega" style="font-size: clamp(44px, 6vw, 72px);">30秒</span>
           </div>
         </div>
 
         <div class="laptop-text" data-index="2">
           <span class="label-eyebrow">Use Case 03 / 07</span>
-          <h3 class="mt-5 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
-              style="font-size: clamp(32px, 4.5vw, 56px);">
+          <h3 class="mt-3 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
+              style="font-size: clamp(28px, 3.4vw, 44px);">
             商談メモ、<br>次回の一手まで。
           </h3>
           <p class="mt-6 text-body text-ink-700">
             録音すれば、AIが文字起こし→要約→<span class="text-gold-700">次回提案のドラフト</span>まで自動生成。
             クロージングまでのスピードが段違いに上がります。
           </p>
-          <div class="mt-10 flex items-baseline gap-5">
+          <div class="mt-6 flex items-baseline gap-5">
             <span class="text-ink-500 line-through text-2xl">90分</span>
             <span class="text-gold-700 text-xl">→</span>
-            <span class="stat-mega" style="font-size: clamp(56px, 8vw, 96px);">0分</span>
+            <span class="stat-mega" style="font-size: clamp(44px, 6vw, 72px);">0分</span>
           </div>
         </div>
 
         <div class="laptop-text" data-index="3">
           <span class="label-eyebrow">Use Case 04 / 07</span>
-          <h3 class="mt-5 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
-              style="font-size: clamp(32px, 4.5vw, 56px);">
+          <h3 class="mt-3 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
+              style="font-size: clamp(28px, 3.4vw, 44px);">
             営業案件、<br>取りこぼしゼロ。
           </h3>
           <p class="mt-6 text-body text-ink-700">
             全案件の進捗・リスク・次のアクションをAIが常時監視。
             <span class="text-gold-700">放置されている案件を即検知</span>し、商機を逃しません。
           </p>
-          <div class="mt-10 flex items-baseline gap-5">
+          <div class="mt-6 flex items-baseline gap-5">
             <span class="text-ink-500 line-through text-2xl">週2時間</span>
             <span class="text-gold-700 text-xl">→</span>
-            <span class="stat-mega" style="font-size: clamp(56px, 8vw, 96px);">0分</span>
+            <span class="stat-mega" style="font-size: clamp(44px, 6vw, 72px);">0分</span>
           </div>
         </div>
 
         <div class="laptop-text" data-index="4">
           <span class="label-eyebrow">Use Case 05 / 07</span>
-          <h3 class="mt-5 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
-              style="font-size: clamp(32px, 4.5vw, 56px);">
+          <h3 class="mt-3 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
+              style="font-size: clamp(28px, 3.4vw, 44px);">
             ホットリード、<br>AIが見抜く。
           </h3>
           <p class="mt-6 text-body text-ink-700">
             問い合わせ履歴・行動データから、AIが <span class="text-gold-700">受注確度の高いリード</span> を自動でハイライト。
             営業の優先順位が即座に決まります。
           </p>
-          <div class="mt-10 flex items-baseline gap-5">
+          <div class="mt-6 flex items-baseline gap-5">
             <span class="text-ink-500 line-through text-2xl">半日</span>
             <span class="text-gold-700 text-xl">→</span>
-            <span class="stat-mega" style="font-size: clamp(56px, 8vw, 96px);">5分</span>
+            <span class="stat-mega" style="font-size: clamp(44px, 6vw, 72px);">5分</span>
           </div>
         </div>
 
         <div class="laptop-text" data-index="5">
           <span class="label-eyebrow">Use Case 06 / 07</span>
-          <h3 class="mt-5 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
-              style="font-size: clamp(32px, 4.5vw, 56px);">
+          <h3 class="mt-3 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
+              style="font-size: clamp(28px, 3.4vw, 44px);">
             コンテンツ、<br>毎日配信。
           </h3>
           <p class="mt-6 text-body text-ink-700">
             ブログ・SNS・メルマガをAIが量産。
             <span class="text-gold-700">継続発信で認知が広がり</span>、新規リードの流入が安定します。
           </p>
-          <div class="mt-10 flex items-baseline gap-5">
+          <div class="mt-6 flex items-baseline gap-5">
             <span class="text-ink-500 line-through text-2xl">1時間</span>
             <span class="text-gold-700 text-xl">→</span>
-            <span class="stat-mega" style="font-size: clamp(56px, 8vw, 96px);">5分</span>
+            <span class="stat-mega" style="font-size: clamp(44px, 6vw, 72px);">5分</span>
           </div>
         </div>
 
         <div class="laptop-text" data-index="6">
           <span class="label-eyebrow text-gold-700">★ Featured / Use Case 07 / 07</span>
-          <h3 class="mt-5 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
-              style="font-size: clamp(32px, 4.5vw, 56px);">
+          <h3 class="mt-3 font-serif font-bold text-ink-900 tracking-tightest leading-tight"
+              style="font-size: clamp(28px, 3.4vw, 44px);">
             提案システム、<br>
             <span class="text-gold-700">その場で内製。</span>
           </h3>
@@ -285,7 +285,7 @@
           <div class="mt-10 flex items-baseline gap-5 flex-wrap">
             <span class="text-ink-500 line-through text-2xl">¥3,000,000〜</span>
             <span class="text-gold-700 text-xl">→</span>
-            <span class="stat-mega" style="font-size: clamp(56px, 8vw, 96px);">¥0</span>
+            <span class="stat-mega" style="font-size: clamp(44px, 6vw, 72px);">¥0</span>
           </div>
         </div>
       </div>

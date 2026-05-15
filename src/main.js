@@ -38,6 +38,7 @@ const lgQuery = window.matchMedia('(min-width: 1024px)');
 
 // ───────────────────────────────────────────────────────────
 // Laptop section: pin + scroll-driven screen swap + text crossfade
+// Smoothly crossfades between adjacent panels using continuous progress.
 // ───────────────────────────────────────────────────────────
 const laptopSection = document.querySelector('#laptop-section');
 const laptopCanvas = document.getElementById('laptop-canvas');
@@ -48,58 +49,158 @@ if (laptopSection && laptopCanvas) {
   const dots = laptopSection.querySelectorAll('.laptop-dot');
   const N = textPanels.length;
 
-  // Initial active panel
-  if (textPanels[0]) textPanels[0].classList.add('is-active');
-  if (dots[0]) dots[0].classList.add('is-active');
+  // Convert text panels to inline-style controlled (override .is-active class
+  // mechanism for continuous interpolation)
+  textPanels.forEach((panel) => {
+    panel.style.transition = 'none'; // we handle smoothness via per-frame updates
+  });
 
-  function setActive(idx) {
-    laptop.setProgress(idx / N);
+  /**
+   * Continuous panel update.
+   * progress: 0..1 across the entire section
+   * Maps to N segments. Within each segment:
+   *   - First 70%: panel fully visible (settled)
+   *   - Last 30%: crossfade to next panel
+   */
+  function updatePanels(progress) {
+    const f = progress * N;             // 0..N
+    const idx = Math.min(N - 1, Math.floor(f));
+    const localT = f - idx;             // 0..1 within current segment
+    const FADE_START = 0.70;            // when crossfade begins within segment
+    let crossfadeT = 0;
+    if (localT > FADE_START) {
+      crossfadeT = (localT - FADE_START) / (1 - FADE_START);
+    }
+    // Smooth ease for crossfade
+    const eased = crossfadeT * crossfadeT * (3 - 2 * crossfadeT);
+
     textPanels.forEach((panel, i) => {
-      panel.classList.toggle('is-active', i === idx);
+      let opacity = 0;
+      let y = 30;
+      if (i === idx) {
+        opacity = 1 - eased;
+        y = eased * -10;            // slide up slightly as it leaves
+      } else if (i === idx + 1) {
+        opacity = eased;
+        y = (1 - eased) * 30;       // come up from below
+      }
+      panel.style.opacity = String(opacity);
+      panel.style.transform = `translateY(${y}px)`;
+      panel.style.pointerEvents = opacity > 0.5 ? 'auto' : 'none';
     });
+
+    // Dominant index = which panel is currently most visible
+    const dominantIdx = (idx === N - 1 || crossfadeT < 0.5) ? idx : idx + 1;
     dots.forEach((d, i) => {
-      d.classList.toggle('is-active', i === idx);
+      d.classList.toggle('is-active', i === dominantIdx);
+    });
+
+    // Laptop screen content — also driven by continuous progress
+    laptop.setProgress(progress);
+  }
+
+  // Initial state
+  updatePanels(0);
+
+  // ── Setup: switches between desktop pin-mode and mobile autoplay-mode ──
+  let scrollTriggerInstance = null;
+  let mobileInterval = null;
+  let mobileObserver = null;
+  let mobileIdx = 0;
+  let inView = false;
+
+  function teardown() {
+    if (scrollTriggerInstance) {
+      scrollTriggerInstance.kill();
+      scrollTriggerInstance = null;
+    }
+    if (mobileInterval) {
+      clearInterval(mobileInterval);
+      mobileInterval = null;
+    }
+    if (mobileObserver) {
+      mobileObserver.disconnect();
+      mobileObserver = null;
+    }
+  }
+
+  function setupDesktop() {
+    teardown();
+    scrollTriggerInstance = ScrollTrigger.create({
+      trigger: laptopSection,
+      start: 'top top',
+      // Reduced pin distance: 0.7 viewport per card transition (was 1.0)
+      end: () => `+=${(N - 1) * window.innerHeight * 0.7}`,
+      pin: true,
+      pinSpacing: true,
+      // pinType:'transform' avoids fixed-position jolt with Lenis smooth scroll
+      pinType: 'transform',
+      scrub: 0.4,                  // snappier (was 1)
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+      fastScrollEnd: true,
+      onUpdate: (self) => {
+        updatePanels(self.progress);
+      },
     });
   }
 
-  if (!prefersReducedMotion && lgQuery.matches) {
-    ScrollTrigger.create({
-      trigger: laptopSection,
-      start: 'top top',
-      end: () => `+=${(N - 1) * window.innerHeight}`,
-      pin: true,
-      pinSpacing: true,
-      scrub: 1,
-      anticipatePin: 1,
-      invalidateOnRefresh: true,
-      onUpdate: (self) => {
-        const p = self.progress;
-        const idx = Math.min(N - 1, Math.floor(p * N));
-        laptop.setProgress(p);
-        textPanels.forEach((panel, i) => {
-          panel.classList.toggle('is-active', i === idx);
-        });
-        dots.forEach((d, i) => {
-          d.classList.toggle('is-active', i === idx);
-        });
-      },
-    });
-  } else {
-    // Mobile / reduced-motion: cycle through use cases on dot tap
-    let mobileIdx = 0;
-    const cycle = () => {
-      mobileIdx = (mobileIdx + 1) % N;
-      setActive(mobileIdx);
-    };
+  function setupMobile() {
+    teardown();
+    // Tap-to-switch: dots become interactive
     dots.forEach((d, i) => {
       d.style.cursor = 'pointer';
       d.style.pointerEvents = 'auto';
-      d.addEventListener('click', () => setActive(i));
+      // Replace any existing handler — clone to drop listeners
+      const newDot = d.cloneNode(true);
+      d.parentNode.replaceChild(newDot, d);
     });
+    // Re-query dots after replacement
+    const freshDots = laptopSection.querySelectorAll('.laptop-dot');
+    freshDots.forEach((d, i) => {
+      d.addEventListener('click', () => {
+        mobileIdx = i;
+        // Snap to centered position within segment i (no transition)
+        const targetProgress = (i + 0.35) / N;
+        updatePanels(targetProgress);
+      });
+    });
+
+    // Auto-advance only when section is in view
     if (!prefersReducedMotion) {
-      // Auto-advance every 4s on mobile
-      setInterval(cycle, 4000);
+      mobileObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            inView = entry.isIntersecting;
+          });
+        },
+        { threshold: 0.25 },
+      );
+      mobileObserver.observe(laptopSection);
+      mobileInterval = setInterval(() => {
+        if (!inView) return;
+        mobileIdx = (mobileIdx + 1) % N;
+        const targetProgress = (mobileIdx + 0.35) / N;
+        updatePanels(targetProgress);
+      }, 4500);
     }
+  }
+
+  function activateMode() {
+    if (!prefersReducedMotion && lgQuery.matches) {
+      setupDesktop();
+    } else {
+      setupMobile();
+    }
+  }
+
+  activateMode();
+
+  // React to viewport resizes that cross the lg breakpoint
+  if (typeof lgQuery.addEventListener === 'function') {
+    lgQuery.addEventListener('change', () => activateMode());
+  } else if (typeof lgQuery.addListener === 'function') {
+    lgQuery.addListener(() => activateMode());
   }
 }
 
